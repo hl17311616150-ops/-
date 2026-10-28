@@ -38,6 +38,8 @@ export const K = {
   prepPrefix: 'prep:',
   /** Home 视图停留（独立 gv: 语义，字符串值不变） */
   homeView: 'gv:homeView',
+  /** AI 分步引导规划草稿 */
+  planningDraft: 'planning-draft',
 } as const
 
 /** 准备清单 key：prep:{tripId} */
