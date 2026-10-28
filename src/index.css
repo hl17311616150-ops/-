@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/*
+ * 《归野》设计 tokens —— 晨光森系 / 主题可切换
+ *
+ * @theme 提供默认（森林）token 作为编译基线，utilities 通过 var(--color-*) 引用；
+ * 运行时由 ThemeProvider 在 <html> 上覆盖同名 CSS 变量完成主题切换（森林/海洋…）。
+ * 关键修正：去掉衬线标题（古风根源），统一无衬线，靠字重/字距/行高/留白体现"松弛森系"。
+ */
+@theme {
+  /* 森林主题（默认）：鲜活苔绿 + 晨雾暖光 + 草木 */
+  --color-background: #e9ecdf;   /* 晨雾带绿的光感 */
+  --color-foreground: #22301f;   /* 深苔林 */
+  --color-card: #f4f6ec;         /* 更亮的雾白绿 */
+  --color-card-foreground: #22301f;
+  --color-muted: #e2e6d6;
+  --color-muted-foreground: #6c7a63; /* 苔灰 */
+  --color-primary: #33503a;      /* 鲜活苔绿（原沉稳墨绿 → 提鲜） */
+  --color-primary-foreground: #f4f6ec;
+  --color-accent: #8aa470;       /* 草木鲜绿 */
+  --color-accent-foreground: #22301f;
+  --color-leaf: #6f8f5c;         /* 叶绿（更鲜） */
+  --color-sun: #c99a3e;          /* 暖阳光 */
+  --color-border: #d6dcc8;
+  --color-ring: #6f8f5c;
+
+  /* 字体：统一无衬线，去古风；标题靠字重+字距营造松弛感 */
+  --font-display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-sans: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  /* 圆角层次：不统一，按层级（更柔和的森系圆角） */
+  --radius-lg: 1.375rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.625rem;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background: var(--color-background);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    color: var(--color-foreground);
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+  }
+
+  /* 手机式细滚动条：轨道透明、拇指随主题半透明、宽度收窄，不抢视觉；滚动能力保留 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-foreground) 22%, transparent) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-foreground) 20%, transparent);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-foreground) 36%, transparent);
+  }
+}
+
+/* 页面切换：新页从下方滑入 + 淡入（一次显示一页的上下切换过渡） */
+@keyframes page-slide-up-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.page-slide {
+  animation: page-slide-up-in 0.28s ease both;
+}
