@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { bootstrap } from './bootstrap'
 
 describe('启动初始化 bootstrap', () => {
@@ -16,5 +16,14 @@ describe('启动初始化 bootstrap', () => {
     // 让 migrateLegacyPhotos 抛错（如 IndexedDB 被破坏）时，bootstrap 仍 resolve
     const r = await bootstrap()
     expect(r.schemaVersion).toBeGreaterThanOrEqual(2)
+  })
+
+  it('照片迁移抛错时 bootstrap 仍 resolve，photosMigrated 置 0（Review Focus #4）', async () => {
+    const album = await import('./album')
+    const spy = vi.spyOn(album, 'migrateLegacyPhotos').mockRejectedValueOnce(new Error('IDB broken'))
+    const r = await bootstrap() // 不 reject
+    expect(r.photosMigrated).toBe(0)
+    expect(r.schemaVersion).toBeGreaterThanOrEqual(2)
+    spy.mockRestore()
   })
 })
