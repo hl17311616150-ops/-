@@ -1,19 +1,9 @@
 import { loadArray, save } from '../storage/store'
 import { K } from '../storage/keys'
-import type { DiaryEntry, PhotoEntry, Trip } from '../types'
-import { createPhotoEntry } from '../types'
+import type { DiaryEntry, Trip } from '../types'
 
 /** 回收站自动清除阈值：超过该天数彻底物理删除 */
 const RECYCLE_DAYS = 30
-
-function isPhotoEntry(x: unknown): x is PhotoEntry {
-  return (
-    !!x &&
-    typeof x === 'object' &&
-    typeof (x as PhotoEntry).id === 'string' &&
-    typeof (x as PhotoEntry).url === 'string'
-  )
-}
 
 export function getVisited(): string[] {
   return loadArray(K.visited, (x): x is string => typeof x === 'string', [])
@@ -39,21 +29,6 @@ export function toggleVisited(destinationId: string): boolean {
   }
   markVisited(destinationId)
   return true
-}
-
-export function getPhotos(): PhotoEntry[] {
-  return loadArray(K.photos, isPhotoEntry, [])
-}
-
-export function addPhoto(destinationId: string, url: string): void {
-  save(K.photos, [...getPhotos(), createPhotoEntry(destinationId, url)])
-}
-
-export function removePhoto(photoId: string): void {
-  save(
-    K.photos,
-    getPhotos().filter((p) => p.id !== photoId),
-  )
 }
 
 // —— 已出发行程档案（足迹·回顾）——

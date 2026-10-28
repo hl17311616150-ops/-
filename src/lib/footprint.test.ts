@@ -1,17 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   addArchivedTrip,
-  addPhoto,
   addTripDiaryEntry,
   getArchivedTrips,
-  getPhotos,
   getRecycledTrips,
   getVisited,
   markVisited,
   purgeRecycledTrip,
   recycleArchivedTrip,
   removeArchivedTrip,
-  removePhoto,
   removeTripDiaryEntry,
   restoreRecycledTrip,
   sweepRecycledTrips,
@@ -35,9 +32,8 @@ function departedTrip(id = 'trip_1', at = 1000): ReturnType<typeof createTrip> {
 }
 
 describe('个人空间 footprint', () => {
-  it('初始无足迹、无照片', () => {
+  it('初始无足迹', () => {
     expect(getVisited()).toEqual([])
-    expect(getPhotos()).toEqual([])
   })
 
   it('markVisited 记录去过，unmarkVisited 移除', () => {
@@ -52,16 +48,6 @@ describe('个人空间 footprint', () => {
     markVisited('a')
     markVisited('a')
     expect(getVisited()).toEqual(['a'])
-  })
-
-  it('addPhoto 记录照片，removePhoto 删除', () => {
-    addPhoto('a', 'data:image/png;base64,x')
-    addPhoto('a', 'data:image/png;base64,y')
-    const photos = getPhotos()
-    expect(photos.length).toBe(2)
-    expect(photos.every((p) => p.visibility === 'self')).toBe(true)
-    removePhoto(photos[0].id)
-    expect(getPhotos().length).toBe(1)
   })
 
   it('addArchivedTrip 记录已出发行程（含 departedAt 与日记）', () => {
