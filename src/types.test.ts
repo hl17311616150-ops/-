@@ -21,6 +21,15 @@ describe('数据模型工厂', () => {
     expect(trip.diary).toEqual([])
   })
 
+  it('createTrip 显式初始化 v2 字段', () => {
+    const t = createTrip()
+    expect(t.departAnchor).toBeNull()
+    expect(t.backAnchor).toBeNull()
+    expect(t.dayPlans).toEqual([])
+    expect(t.source).toBe('self')
+    expect(t.sourcePostId).toBeNull()
+  })
+
   it('createDiaryEntry 返回空文本条目（照片可空、节点可空）', () => {
     const e = createDiaryEntry()
     expect(typeof e.id).toBe('string')

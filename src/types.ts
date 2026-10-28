@@ -4,6 +4,8 @@
  * 社区进 v2 时可直接迁移，不必重建模型。
  */
 
+import type { TimeAnchor, TimeOfDay } from './lib/time'
+
 export type Region = 'local' | 'domestic' | 'abroad'
 export type Visibility = 'self'
 
@@ -41,6 +43,58 @@ export interface DiaryEntry {
   updatedAt: number
 }
 
+/** 自驾段：两个地点之间的一段驾驶 */
+export interface DriveSegment {
+  from: string
+  to: string
+  distanceKm: number
+  durationMin: number
+}
+
+/** 住宿：某一晚的落脚点 */
+export interface Stay {
+  nightIndex: number
+  name: string
+  location: string
+  changed: boolean
+}
+
+/** 当天的一个排程块（上午/下午/晚上的安排，可含自驾段） */
+export interface ScheduledBlock {
+  period: TimeOfDay
+  title: string
+  poiId?: string
+  note?: string
+  drive?: DriveSegment
+}
+
+/** 行程中的一天（v2 按天计划） */
+export interface DayPlan {
+  dayIndex: number
+  date: string
+  blocks: ScheduledBlock[]
+  stay?: Stay
+}
+
+/** 行程来源：自建 / AI 生成 / 社区 */
+export type TripSource = 'self' | 'ai' | 'community'
+
+/** AI 规划草稿所处步骤 */
+export type PlanningStep = 'time' | 'route' | 'points' | 'result'
+
+/** AI 规划草稿：分步过程中的暂存数据 */
+export interface PlanningDraft {
+  id: string
+  step: PlanningStep
+  depart: TimeAnchor | null
+  back: TimeAnchor | null
+  points: string[]
+  selectedPois: Record<string, string[]>
+  days: DayPlan[]
+  createdAt: number
+  updatedAt: number
+}
+
 /** 行程：总天数 + 总路线（出发点 → 途经点 → 目的地） */
 export interface Trip {
   id: string
@@ -66,6 +120,16 @@ export interface Trip {
   createdAt: number
   updatedAt: number
   visibility: Visibility
+  /** v2：出发时间锚点 */
+  departAnchor?: TimeAnchor | null
+  /** v2：返程时间锚点 */
+  backAnchor?: TimeAnchor | null
+  /** v2：按天计划 */
+  dayPlans?: DayPlan[]
+  /** v2：行程来源 */
+  source?: TripSource
+  /** v2：来源社区帖子 id（来源为 community 时） */
+  sourcePostId?: string | null
 }
 
 /** 出发前准备清单项 */
@@ -127,6 +191,11 @@ export function createTrip(): Trip {
     createdAt: now,
     updatedAt: now,
     visibility: 'self',
+    departAnchor: null,
+    backAnchor: null,
+    dayPlans: [],
+    source: 'self',
+    sourcePostId: null,
   }
 }
 
