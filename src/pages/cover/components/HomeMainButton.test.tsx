@@ -67,6 +67,16 @@ it('毛玻璃按钮：自适应内容（非全宽）、padding/字体/阴影、�
   const arrow = btn.querySelectorAll('span')[1]
   expect(arrow.style.backgroundColor).toBe('rgba(255, 255, 255, 0.85)')
   expect(arrow.style.color).toBe('rgb(58, 74, 62)')
+  // 按钮靠左（与标题/功能说明左对齐，mockup 里 Start Exploring 在左侧）
+  expect(btn.parentElement?.style.alignItems).toBe('flex-start')
+})
+
+it('hint 左对齐、不居中（草稿/已生成）', () => {
+  renderBtn(DRAFT)
+  const slot = document.querySelector<HTMLElement>('[data-testid="home-state-slot"] span')
+  expect(slot).not.toBeNull()
+  expect(slot?.style.left).toBe('0px')
+  expect(slot?.style.textAlign).toBe('')
 })
 
 it('已生成实心按钮：绿色圆 + 白箭头', () => {

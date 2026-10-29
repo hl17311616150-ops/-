@@ -84,10 +84,10 @@ export default function HomeMainButton({ state }: HomeMainButtonProps) {
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'flex-start',
       }}
     >
-      {/* 固定 44px 状态槽：hint 有无都不改变槽高，保证按钮 Y 位置不变 */}
+      {/* 固定 44px 状态槽：hint 有无都不改变槽高，保证按钮 Y 位置不变；左对齐 */}
       <div
         data-testid="home-state-slot"
         style={{ position: 'relative', height: '44px', width: '100%' }}
@@ -98,8 +98,6 @@ export default function HomeMainButton({ state }: HomeMainButtonProps) {
               position: 'absolute',
               bottom: '12px',
               left: 0,
-              right: 0,
-              textAlign: 'center',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
