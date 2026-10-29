@@ -6,10 +6,12 @@ import type { PlanningDraft, PlanningStep } from '../../types'
 import { createDraft, getDraft, saveDraft } from '../../lib/planningDraft'
 import type { TimeAnchor, TimeOfDay } from '../../lib/time'
 import { parseTimeText } from '../../lib/plan/timeParse'
+import { parseRouteText } from '../../lib/plan/routeParse'
 import { StepBar } from './components/StepBar'
 import { ChatBubble } from './components/ChatBubble'
 import type { StepProps } from './stepProps'
 import TimeStep from './steps/TimeStep'
+import RouteStep from './steps/RouteStep'
 
 /** 各步骤占位文案（后续 Task 由真实步骤组件替换） */
 const STEP_PLACEHOLDER: Record<PlanningStep, string> = {
@@ -22,7 +24,7 @@ const STEP_PLACEHOLDER: Record<PlanningStep, string> = {
 /** 各步骤 AI 引导语（占位阶段先静态展示） */
 const STEP_GREETING: Record<PlanningStep, string> = {
   time: '你好，我是归野规划助手～先告诉我打算什么时候出发、玩几天吧。',
-  route: '时间定好了，接着说说你想走的路线吧。',
+  route: '把你想走的路线发我，文字或路线截图都行。',
   points: '路线清楚了，挑几个你最想去的景点。',
   result: '信息齐了，正在为你生成行程方案。',
 }
@@ -109,7 +111,8 @@ export default function PlanFlow() {
   /**
    * 底部输入框提交：按当前步骤分发。
    * - time：自然语言经 parseTimeText 解析出出发/返程锚点后写回草稿；解析失败保持现状。
-   * - route / points / result 分支由后续 Task 6 / 8 接入。
+   * - route：自然语言路线经 parseRouteText 拆分出途经点后写回草稿；解析为空保持现状。
+   * - points / result 分支由后续 Task 接入。
    */
   const handleUserInput = (text: string) => {
     const trimmed = text.trim()
@@ -118,6 +121,9 @@ export default function PlanFlow() {
       const now = new Date()
       const parsed = parseTimeText(trimmed, now.getFullYear(), now.getMonth() + 1)
       if (parsed) update({ depart: parsed.depart, back: parsed.back })
+    } else if (draft.step === 'route') {
+      const pts = parseRouteText(trimmed)
+      if (pts.length > 0) update({ points: pts })
     }
   }
 
@@ -150,10 +156,16 @@ export default function PlanFlow() {
 
       <StepBar step={draft.step} />
 
-      {/* 对话区：AI 问候 + 当前步骤；time 步接入 TimeStep，其余步骤仍为占位 */}
+      {/* 对话区：AI 问候 + 当前步骤；time / route 步接入真实步骤，其余步骤仍为占位 */}
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <ChatBubble who="ai">{STEP_GREETING[draft.step]}</ChatBubble>
-        {draft.step === 'time' ? <TimeStep {...stepProps} /> : <StepPlaceholder {...stepProps} />}
+        {draft.step === 'time' ? (
+          <TimeStep {...stepProps} />
+        ) : draft.step === 'route' ? (
+          <RouteStep {...stepProps} />
+        ) : (
+          <StepPlaceholder {...stepProps} />
+        )}
       </main>
 
       {/* 底部常驻输入框：触控目标 ≥44px，回车提交 */}
