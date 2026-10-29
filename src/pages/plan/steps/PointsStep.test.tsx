@@ -30,3 +30,19 @@ it('生成按钮推进到 result（未选时先补默认）', async () => {
   await userEvent.click(screen.getByRole('button', { name: /生成完整行程/ }))
   expect(update).toHaveBeenCalledWith(expect.objectContaining({ step: 'result' }))
 })
+
+it('空路线时按钮禁用，并提示先在上一步确定路线', () => {
+  setup([])
+  expect(screen.getByText(/先在上一步确定路线/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /全部点帮我定/ })).toBeDisabled()
+  expect(screen.getByRole('button', { name: /生成完整行程/ })).toBeDisabled()
+})
+
+it('无收录库的点显示暂未收录，批量补默认不写入空数组', async () => {
+  const { update } = setup(['长沙', '自贡'])
+  expect(screen.getByText(/暂未收录/)).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /全部点帮我定/ }))
+  const arg = update.mock.calls[0][0] as { selectedPois: Record<string, string[]> }
+  expect(arg.selectedPois).toHaveProperty('长沙')
+  expect(arg.selectedPois).not.toHaveProperty('自贡')
+})

@@ -33,20 +33,34 @@ export default function PointsStep({ draft, update }: StepProps) {
     : []
   const selectedPois = normalizeSelectedPois(draft.selectedPois)
 
-  // id → 名称映射：逐点取该点全量 POI 建立，供已选摘要解析首个景点名
+  // id → 名称映射：逐点取该点全量 POI 建立，供已选摘要解析首个景点名；
+  // hasLibrary 标记 POI 库内是否收录该点（自由文本城市可能无收录）
   const nameMap = new Map<string, string>()
+  const hasLibrary = new Set<string>()
   for (const point of points) {
-    for (const poi of queryPois(point, { page: 0, pageSize: 100 }).items) {
+    const { items, total } = queryPois(point, { page: 0, pageSize: 100 })
+    if (total > 0) hasLibrary.add(point)
+    for (const poi of items) {
       nameMap.set(poi.id, poi.name)
     }
   }
 
-  /** 构造完整 selectedPois：已有选中原样保留，空点补默认经典项 */
+  // 路线非空才允许批量默认 / 生成；空路线（旧坏草稿）拦截静默推进
+  const ready = points.length > 0
+
+  /**
+   * 构造完整 selectedPois：已有选中原样保留；库内未选点补默认经典项；
+   * 无收录库的点不强行写入空数组（避免覆盖、避免误判为未选）。
+   */
   const fillDefaults = (): Record<string, string[]> => {
     const next: Record<string, string[]> = {}
     for (const point of points) {
       const existing = selectedPois[point]
-      next[point] = Array.isArray(existing) && existing.length > 0 ? existing : defaultPoiIds(point)
+      if (Array.isArray(existing) && existing.length > 0) {
+        next[point] = existing
+      } else if (hasLibrary.has(point)) {
+        next[point] = defaultPoiIds(point)
+      }
     }
     return next
   }
@@ -66,7 +80,12 @@ export default function PointsStep({ draft, update }: StepProps) {
 
   return (
     <div className="space-y-3">
-      {active ? (
+      {!ready ? (
+        /* 空路线兜底：旧/坏草稿 points 为空时仅给提示，不渲染列表行 */
+        <section className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground">
+          先在上一步确定路线，再来挑景点。
+        </section>
+      ) : active ? (
         /* 点详情占位：Task 9 替换为 PointDetail；提供返回列表入口 */
         <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <p className="text-sm font-medium text-foreground">{active}</p>
@@ -82,56 +101,59 @@ export default function PointsStep({ draft, update }: StepProps) {
           </button>
         </section>
       ) : (
-        <>
-          {/* 逐点列表行：首字方块 + 点名 + 已选摘要，整行可点（热区 min-h-14 ≥44px） */}
-          <div className="space-y-2">
-            {points.map((point) => {
-              const ids = selectedPois[point] ?? []
-              const firstName = ids[0] ? nameMap.get(ids[0]) : undefined
-              const summary =
-                ids.length > 0
-                  ? firstName
-                    ? `已选 ${ids.length} · ${firstName}…`
-                    : `已选 ${ids.length}`
-                  : '还没选，点进去'
-              return (
-                <button
-                  key={point}
-                  type="button"
-                  onClick={() => setSelectedPoint(point)}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base text-primary">
-                    {point.charAt(0)}
-                  </span>
-                  <span className="min-w-0 flex-1 space-y-0.5">
-                    <span className="block text-sm font-medium text-foreground">{point}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{summary}</span>
-                  </span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                </button>
-              )
-            })}
-          </div>
+        /* 逐点列表行：首字方块 + 点名 + 已选摘要，整行可点（热区 min-h-14 ≥44px） */
+        <div className="space-y-2">
+          {points.map((point) => {
+            const ids = selectedPois[point] ?? []
+            const firstName = ids[0] ? nameMap.get(ids[0]) : undefined
+            const summary = !hasLibrary.has(point)
+              ? '暂未收录该点景点'
+              : ids.length > 0
+                ? firstName
+                  ? `已选 ${ids.length} · ${firstName}…`
+                  : `已选 ${ids.length}`
+                : '还没选，点进去'
+            return (
+              <button
+                key={point}
+                type="button"
+                onClick={() => setSelectedPoint(point)}
+                className="flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base text-primary">
+                  {point.charAt(0)}
+                </span>
+                <span className="min-w-0 flex-1 space-y-0.5">
+                  <span className="block text-sm font-medium text-foreground">{point}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{summary}</span>
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-          {/* 底部两按钮：批量默认 / 生成完整行程 */}
-          <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={chooseAll}
-              className="h-11 w-full rounded-full border border-border bg-card text-[15px] font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              全部点帮我定
-            </button>
-            <button
-              type="button"
-              onClick={generate}
-              className="h-11 w-full rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              生成完整行程
-            </button>
-          </div>
-        </>
+      {/* 底部两按钮：批量默认 / 生成完整行程；详情占位视图不显示，空路线禁用（热区 h-11 ≥44px） */}
+      {!active && (
+        <div className="space-y-2 pt-1">
+          <button
+            type="button"
+            disabled={!ready}
+            onClick={chooseAll}
+            className="h-11 w-full rounded-full border border-border bg-card text-[15px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+          >
+            全部点帮我定
+          </button>
+          <button
+            type="button"
+            disabled={!ready}
+            onClick={generate}
+            className="h-11 w-full rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            生成完整行程
+          </button>
+        </div>
       )}
     </div>
   )
