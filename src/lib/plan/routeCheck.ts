@@ -55,7 +55,7 @@ const MILEAGE_KM: Record<string, number> = {
 const MAX_DAILY_KM = 500
 
 /** 查询两点之间的简化里程；表内查不到返回 null（该段不参与里程判断） */
-function mileageBetween(a: string, b: string): number | null {
+export function mileageBetween(a: string, b: string): number | null {
   const direct = MILEAGE_KM[`${a}->${b}`]
   if (direct !== undefined) return direct
   const reverse = MILEAGE_KM[`${b}->${a}`]

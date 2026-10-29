@@ -57,6 +57,10 @@ export interface Stay {
   name: string
   location: string
   changed: boolean
+  /** 对应住宿选项 id（来自数据层；旧数据无此字段，按 optional 容错） */
+  stayId?: string
+  rating?: number
+  tags?: string[]
 }
 
 /** 当天的一个排程块（上午/下午/晚上的安排，可含自驾段） */
