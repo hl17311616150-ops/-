@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SuggestionList from './SuggestionList'
 import { buildPlan } from '../../../lib/plan/buildPlan'
-import type { PlanningDraft } from '../../../types'
+import type { DayPlan, PlanningDraft } from '../../../types'
 import { createDraft } from '../../../lib/planningDraft'
 
 function setup() {
@@ -36,8 +36,47 @@ it('列出建议并可单条采纳', async () => {
   expect(screen.getAllByText(/已采纳/).length).toBeGreaterThan(0)
 })
 
-it('全部采纳并重新生成：onApply 收到新行程', async () => {
-  const { onApply } = setup()
+it('全部采纳并重新生成：onApply 收到新行程且建议生效', async () => {
+  const { onApply, days } = setup()
   await userEvent.click(screen.getByTestId('apply-all'))
-  expect(onApply).toHaveBeenCalled()
+
+  expect(onApply).toHaveBeenCalledTimes(1)
+  expect(onApply).toHaveBeenCalledWith(expect.any(Array))
+
+  const applied = onApply.mock.calls[0][0] as DayPlan[]
+  // 天数与原行程一致，且为新数组引用（纯函数深拷贝，不原地改入参）
+  expect(applied).toHaveLength(days.length)
+  expect(applied).not.toBe(days)
+  expect(days[1].stay?.stayId).toBe('stay-jd-1')
+
+  // stay(b) 建议被应用：景德镇首晚（dayIndex=1）换成 stay-jd-2（古窑·瓷都民宿）
+  expect(applied[1].stay?.stayId).toBe('stay-jd-2')
+  expect(applied[1].stay?.name).toBe('古窑·瓷都民宿')
+})
+
+it('忽略补住宿建议：全部采纳时被忽略项不应用，其余建议仍生效', async () => {
+  const { onApply, days } = setup()
+
+  // 定位「补住宿」那条（推荐 古窑·瓷都民宿），只点该条的「忽略」
+  const stayText = screen.getByText(/古窑·瓷都民宿/)
+  const stayCard = stayText.closest('article')
+  expect(stayCard).not.toBeNull()
+  await userEvent.click(within(stayCard as HTMLElement).getByRole('button', { name: '忽略' }))
+
+  await userEvent.click(screen.getByTestId('apply-all'))
+
+  expect(onApply).toHaveBeenCalledTimes(1)
+  const applied = onApply.mock.calls[0][0] as DayPlan[]
+  expect(applied).toHaveLength(days.length)
+  expect(applied).not.toBe(days)
+
+  // 被忽略的 stay 建议未应用：景德镇首晚仍是原住宿 stay-jd-1（陶溪川智选假日）
+  expect(applied[1].stay?.stayId).toBe('stay-jd-1')
+
+  // pace 建议仍生效：自驾日（dayIndex=1）只余陶溪川，古窑移到下一天
+  expect(applied[1].blocks.filter((b) => !b.drive).map((b) => b.poiId)).toEqual(['jdz-taoxichuan'])
+
+  // route 建议仍生效：黟县第二晚统一为第一晚住宿并标记 changed
+  expect(applied[4].stay?.changed).toBe(true)
+  expect(applied[4].stay?.name).toBe(applied[3].stay?.name)
 })
