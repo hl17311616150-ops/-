@@ -110,9 +110,9 @@ export default function PointDetail({ point, selectedIds, onConfirm, onBack }: P
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
+        <h2 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
           {point} · 选景点
-        </h1>
+        </h2>
         <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
           {chosen.length}
         </span>

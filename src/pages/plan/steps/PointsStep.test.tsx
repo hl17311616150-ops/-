@@ -46,3 +46,10 @@ it('无收录库的点显示暂未收录，批量补默认不写入空数组', a
   expect(arg.selectedPois).toHaveProperty('长沙')
   expect(arg.selectedPois).not.toHaveProperty('自贡')
 })
+
+it('无收录库的点行禁用，无法进入空详情，暂未收录提示仍可见', () => {
+  setup(['长沙', '自贡'])
+  const disabledRow = screen.getByRole('button', { name: /自贡/ })
+  expect(disabledRow).toBeDisabled()
+  expect(screen.getByText(/暂未收录/)).toBeInTheDocument()
+})

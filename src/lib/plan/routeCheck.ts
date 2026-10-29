@@ -155,3 +155,22 @@ export function checkRoute(points: string[], time?: TripTimeSummary | null): Rou
   }
   return checks
 }
+
+/**
+ * 替换路线节点后裁剪旧分组映射：仅保留 child（键）仍在新 points 内的条目，
+ * 其余剔除，避免旧路线的孤儿分组残留；points / grouping 为空或缺省时安全返回空对象。
+ */
+export function pruneGrouping(
+  points: string[],
+  grouping?: Record<string, string> | null,
+): Record<string, string> {
+  if (!Array.isArray(points) || !grouping || typeof grouping !== 'object' || Array.isArray(grouping)) {
+    return {}
+  }
+  const keep = new Set(points)
+  const result: Record<string, string> = {}
+  for (const [child, parent] of Object.entries(grouping)) {
+    if (keep.has(child)) result[child] = parent
+  }
+  return result
+}

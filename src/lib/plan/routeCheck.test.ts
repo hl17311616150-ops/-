@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { checkRoute } from './routeCheck'
+import { checkRoute, pruneGrouping } from './routeCheck'
 import type { TripTimeSummary } from '../time'
 
 const time = (totalDays = 6): TripTimeSummary => ({ totalDays, nights: totalDays - 1, fullDays: totalDays - 2, dates: [] })
@@ -63,4 +63,16 @@ it('单日里程 >500km 提示偏赶（仅告知）；刚好 500km 不判偏赶'
   const okTime = ok.find((x) => x.kind === 'time')
   expect(okTime?.title).not.toContain('偏赶')
   expect(okTime?.title).toBe('时间与路程匹配，节奏合理')
+})
+
+it('pruneGrouping：剔除不在新 points 内的孤儿 child，保留有效映射', () => {
+  const grouping = { 宏村: '黟县', 西递: '黟县', 塔川: '黟县' }
+  expect(pruneGrouping(['长沙', '黟县', '宏村', '呈坎'], grouping)).toEqual({ 宏村: '黟县' })
+})
+
+it('pruneGrouping：points 空 / grouping 缺省或空对象时安全返回 {}', () => {
+  expect(pruneGrouping([], { 宏村: '黟县' })).toEqual({})
+  expect(pruneGrouping(['长沙'], undefined)).toEqual({})
+  expect(pruneGrouping(['长沙'], null)).toEqual({})
+  expect(pruneGrouping(['长沙'], {})).toEqual({})
 })

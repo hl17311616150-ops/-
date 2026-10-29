@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { queryPois, defaultPoiIds } from './pois'
+import { queryPois, defaultPoiIds, pruneSelectedPois } from './pois'
 
 it('返回该点 POI 与分页', () => {
   const r = queryPois('长沙', { page: 0, pageSize: 6 })
@@ -23,4 +23,16 @@ it('排序：distance 升序、rating 降序', () => {
 
 it('默认经典项', () => {
   expect(defaultPoiIds('长沙').length).toBeGreaterThan(0)
+})
+
+it('pruneSelectedPois：剔除不在新 points 内的离场点已选记录，保留有效项', () => {
+  const selected = { 长沙: ['poi-cs-1'], 景德镇: ['poi-jdz-2'], 自贡: ['poi-zg-9'] }
+  expect(pruneSelectedPois(['长沙', '呈坎'], selected)).toEqual({ 长沙: ['poi-cs-1'] })
+})
+
+it('pruneSelectedPois：points 空 / selected 缺省或空对象时安全返回 {}', () => {
+  expect(pruneSelectedPois([], { 长沙: ['poi-cs-1'] })).toEqual({})
+  expect(pruneSelectedPois(['长沙'], undefined)).toEqual({})
+  expect(pruneSelectedPois(['长沙'], null)).toEqual({})
+  expect(pruneSelectedPois(['长沙'], {})).toEqual({})
 })

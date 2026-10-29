@@ -98,9 +98,10 @@ export default function PointsStep({ draft, update }: StepProps) {
         /* 逐点列表行：首字方块 + 点名 + 已选摘要，整行可点（热区 min-h-14 ≥44px） */
         <div className="space-y-2">
           {points.map((point) => {
+            const inLibrary = hasLibrary.has(point)
             const ids = selectedPois[point] ?? []
             const firstName = ids[0] ? nameMap.get(ids[0]) : undefined
-            const summary = !hasLibrary.has(point)
+            const summary = !inLibrary
               ? '暂未收录该点景点'
               : ids.length > 0
                 ? firstName
@@ -111,8 +112,13 @@ export default function PointsStep({ draft, update }: StepProps) {
               <button
                 key={point}
                 type="button"
+                disabled={!inLibrary}
                 onClick={() => setSelectedPoint(point)}
-                className="flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted"
+                className={
+                  inLibrary
+                    ? 'flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted'
+                    : 'flex min-h-14 w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left opacity-50'
+                }
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base text-primary">
                   {point.charAt(0)}
@@ -121,7 +127,7 @@ export default function PointsStep({ draft, update }: StepProps) {
                   <span className="block text-sm font-medium text-foreground">{point}</span>
                   <span className="block truncate text-xs text-muted-foreground">{summary}</span>
                 </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                {inLibrary && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />}
               </button>
             )
           })}

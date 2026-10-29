@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { ClipboardEvent, KeyboardEvent } from 'react'
 import type { StepProps } from '../stepProps'
+import type { PlanningDraft } from '../../../types'
 import { parseRouteText, recognizeRouteImage } from '../../../lib/plan/routeParse'
-import { checkRoute } from '../../../lib/plan/routeCheck'
+import { checkRoute, pruneGrouping } from '../../../lib/plan/routeCheck'
 import type { RouteCheck } from '../../../lib/plan/routeCheck'
+import { pruneSelectedPois } from '../../../lib/plan/pois'
 import { computeTripTime } from '../../../lib/time'
 
 /** 地理重叠本地决策：group=归入所属区域重点村；parallel=保持并列、不另算城市 */
@@ -26,13 +28,20 @@ export default function RouteStep({ draft, update }: StepProps) {
   const time = draft.depart && draft.back ? computeTripTime(draft.depart, draft.back) : null
   const checks = draft.points.length > 0 ? checkRoute(draft.points, time) : []
 
+  /** 替换 points 时同步裁剪已离场点的分组映射与已选 POI，避免孤儿数据残留 */
+  const patchReplacedPoints = (pts: string[]): Partial<PlanningDraft> => ({
+    points: pts,
+    pointGrouping: pruneGrouping(pts, draft.pointGrouping ?? {}),
+    selectedPois: pruneSelectedPois(pts, draft.selectedPois ?? {}),
+  })
+
   /** 文字提交：解析非空才写回草稿；空文本不动作 */
   const submitText = () => {
     const text = input.trim()
     if (!text) return
     const pts = parseRouteText(text)
     if (pts.length > 0) {
-      update({ points: pts })
+      update(patchReplacedPoints(pts))
       setInput('')
     }
   }
@@ -59,7 +68,7 @@ export default function RouteStep({ draft, update }: StepProps) {
           try {
             const dataUrl = typeof reader.result === 'string' ? reader.result : ''
             const pts = recognizeRouteImage(dataUrl)
-            if (pts.length > 0) update({ points: pts })
+            if (pts.length > 0) update(patchReplacedPoints(pts))
           } catch {
             // 识别失败保持现状，不抛错
           }

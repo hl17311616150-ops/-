@@ -7,6 +7,8 @@ import { createDraft, getDraft, saveDraft } from '../../lib/planningDraft'
 import type { TimeAnchor, TimeOfDay } from '../../lib/time'
 import { parseTimeText } from '../../lib/plan/timeParse'
 import { parseRouteText } from '../../lib/plan/routeParse'
+import { pruneGrouping } from '../../lib/plan/routeCheck'
+import { pruneSelectedPois } from '../../lib/plan/pois'
 import { StepBar } from './components/StepBar'
 import { ChatBubble } from './components/ChatBubble'
 import type { StepProps } from './stepProps'
@@ -53,7 +55,9 @@ function loadDraft(): PlanningDraft {
     ...existing,
     depart: normalizeAnchor(existing.depart) ?? fallback.depart,
     back: normalizeAnchor(existing.back) ?? fallback.back,
-    points: Array.isArray(existing.points) ? existing.points : fallback.points,
+    points: Array.isArray(existing.points)
+      ? existing.points.filter((p): p is string => typeof p === 'string' && p.length > 0)
+      : fallback.points,
     selectedPois:
       existing.selectedPois && typeof existing.selectedPois === 'object' && !Array.isArray(existing.selectedPois)
         ? existing.selectedPois
@@ -115,7 +119,13 @@ export default function PlanFlow() {
       if (parsed) update({ depart: parsed.depart, back: parsed.back })
     } else if (draft.step === 'route') {
       const pts = parseRouteText(trimmed)
-      if (pts.length > 0) update({ points: pts })
+      if (pts.length > 0) {
+        update({
+          points: pts,
+          pointGrouping: pruneGrouping(pts, draft.pointGrouping ?? {}),
+          selectedPois: pruneSelectedPois(pts, draft.selectedPois ?? {}),
+        })
+      }
     }
   }
 
