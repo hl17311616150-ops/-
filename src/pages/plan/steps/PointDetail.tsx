@@ -250,7 +250,7 @@ export default function PointDetail({ point, selectedIds, onConfirm, onBack }: P
         <p className="text-center text-sm text-muted-foreground">已选 {chosen.length} 个</p>
         <button
           type="button"
-          onClick={() => onConfirm(chosen)}
+          onClick={() => { onConfirm(chosen); onBack() }}
           className="h-11 w-full rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
           确认
