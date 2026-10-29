@@ -39,25 +39,28 @@ export default function HomeMainButton({ state }: HomeMainButtonProps) {
   }
 
   const buttonStyle = {
-    width: '100%',
-    height: '54px',
-    borderRadius: 999,
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 16px',
+    gap: '9px',
+    padding: '9px 15px 9px 18px',
+    borderRadius: 999,
     boxSizing: 'border-box',
     textDecoration: 'none',
+    fontSize: '13px',
+    fontWeight: 600,
+    letterSpacing: '0.5px',
+    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
     ...(isGenerated
       ? {
           backgroundColor: '#fff',
-          border: 'none',
-          color: '#1f2a24',
+          border: '1px solid #fff',
+          color: '#3a4a3e',
         }
       : {
           backgroundColor: 'rgba(255, 255, 255, 0.18)',
           border: '1px solid rgba(255, 255, 255, 0.5)',
           backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           color: '#fff',
         }),
   } as const
@@ -71,8 +74,8 @@ export default function HomeMainButton({ state }: HomeMainButtonProps) {
     justifyContent: 'center',
     flexShrink: 0,
     ...(isGenerated
-      ? { backgroundColor: 'rgba(31, 42, 36, 0.08)', color: '#1f2a24' }
-      : { backgroundColor: 'rgba(255, 255, 255, 0.28)', color: '#fff' }),
+      ? { backgroundColor: '#6FA879', color: '#fff' }
+      : { backgroundColor: 'rgba(255, 255, 255, 0.85)', color: '#3a4a3e' }),
   } as const
 
   return (
@@ -110,7 +113,7 @@ export default function HomeMainButton({ state }: HomeMainButtonProps) {
       </div>
 
       <Link to={to} data-testid="home-main-button" style={buttonStyle}>
-        <span style={{ fontSize: '15px', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontWeight: 600 }}>{label}</span>
         <span style={arrowCircleStyle}>
           <ArrowRight size={13} strokeWidth={2} />
         </span>
