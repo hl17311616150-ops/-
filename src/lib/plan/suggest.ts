@@ -121,7 +121,7 @@ export function suggest(dayPlans: DayPlan[], draft: PlanningDraft): Suggestion[]
 
     push(
       'pace',
-      `Day${dayIndex} ${drive.from}→${drive.to} 车程长，当天还排了多个景点偏赶，建议把靠后的景点移到相邻天。`,
+      `Day${dayIndex + 1} ${drive.from}→${drive.to} 车程长，当天还排了多个景点偏赶，建议把靠后的景点移到相邻天。`,
       `该段自驾 ${drive.distanceKm}km，当天另排 ${poiBlocks.length} 个景点，节奏偏紧。`,
       { targetDayIndex: dayIndex },
     )
@@ -170,9 +170,13 @@ export function suggest(dayPlans: DayPlan[], draft: PlanningDraft): Suggestion[]
     if (existingTags.includes(IN_CITY_TAG)) continue
     const inCity = queryStays(plan.city).find((option) => option.tags.includes(IN_CITY_TAG))
     if (!inCity) continue
+    // 配套按真实标签动态组装：必含「景区内」（触发条件）；含早 / 可停车仅在标签存在时写出，不虚构配套
+    const amenities = [IN_CITY_TAG]
+    if (inCity.tags.includes('含早')) amenities.push('含早')
+    if (inCity.tags.includes('可停车')) amenities.push('可停车')
     push(
       'stay',
-      `${plan.city} 当晚推荐 ${inCity.name}（评分 ${inCity.rating}、景区内、可停车）。`,
+      `${plan.city} 当晚推荐 ${inCity.name}（评分 ${inCity.rating}、${amenities.join('、')}）。`,
       `现住 ${stay.name} 不在景区内，同片区有景区内住宿可选，省去往返奔波。`,
       { targetDayIndex: plan.firstDayIndex, stayId: inCity.id },
     )

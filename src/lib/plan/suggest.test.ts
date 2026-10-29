@@ -66,6 +66,23 @@ it('默认行程恰好 3 条建议：pace→1、route→3、stay(b)→1 推荐 s
   expect(s.filter((x) => x.kind === 'stay')).toHaveLength(1)
 })
 
+it('节奏文案天编号为 1 基（Day2），targetDayIndex 保持 0 基（Review #1）', () => {
+  const { days, draft } = made()
+  const pace = suggest(days, draft).find((x) => x.kind === 'pace')
+  expect(pace?.text).toMatch(/^Day2 /)
+  // 功能字段仍为 0 基下标，不随展示文案变化
+  expect(pace?.targetDayIndex).toBe(1)
+})
+
+it('景区内住宿配套按真实标签动态组装：含「景区内、含早」，不虚构「可停车」（Review #1）', () => {
+  const { days, draft } = made()
+  const stay = suggest(days, draft).find((x) => x.kind === 'stay')
+  expect(stay?.stayId).toBe('stay-jd-2')
+  expect(stay?.text).toContain('景区内')
+  expect(stay?.text).toContain('含早')
+  expect(stay?.text).not.toContain('可停车')
+})
+
 it('建议 id 按生成顺序编号，初始状态均为 open', () => {
   const { days, draft } = made()
   const s = suggest(days, draft)
