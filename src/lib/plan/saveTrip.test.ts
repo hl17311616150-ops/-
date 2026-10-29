@@ -54,3 +54,38 @@ it('转换：标题/天数/锚点/来源正确（draft → Trip），并落盘 K
   expect(persisted?.dayPlans).toHaveLength(6)
   expect(persisted?.destinationId).toBe('呈坎')
 })
+
+it('容错：depart/back 为 null 时不抛错，出发日期与两个锚点均为 null', () => {
+  const d: PlanningDraft = {
+    ...createDraft(),
+    depart: null,
+    back: null,
+    points: ['长沙'],
+    pointGrouping: {},
+    selectedPois: { 长沙: [] },
+  }
+  const plans = buildPlan(d)
+
+  const trip = draftToTrip(d, plans)
+  expect(trip.departDate).toBeNull()
+  expect(trip.departAnchor).toBeNull()
+  expect(trip.backAnchor).toBeNull()
+})
+
+it('容错：points 为空（无城市）时不抛错，路线字段安全兜底、标题以「日」结尾', () => {
+  const d: PlanningDraft = {
+    ...createDraft(),
+    depart: null,
+    back: null,
+    points: [],
+    pointGrouping: {},
+    selectedPois: {},
+  }
+  const plans = buildPlan(d)
+
+  const trip = draftToTrip(d, plans)
+  expect(trip.startPoint).toBe('')
+  expect(trip.waypoints).toEqual([])
+  expect(trip.destinationId).toBeNull()
+  expect(trip.title).toMatch(/日$/)
+})
