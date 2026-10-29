@@ -27,3 +27,10 @@ it('下午时段可识别', () => {
   expect(r?.depart.period).toBe('afternoon')
   expect(r?.back.period).toBe('afternoon')
 })
+it('无动作词时按日期先后定出发/返程，并补默认时段', () => {
+  const r = R('8号，13号')
+  expect(r?.depart.date).toBe('2026-11-08')
+  expect(r?.back.date).toBe('2026-11-13')
+  expect(r?.depart.period).toBe('morning')
+  expect(r?.back.period).toBe('evening')
+})
