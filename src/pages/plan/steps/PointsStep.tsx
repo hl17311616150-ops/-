@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { StepProps } from '../stepProps'
 import { queryPois, defaultPoiIds } from '../../../lib/plan/pois'
+import PointDetail from './PointDetail'
 
 /**
  * 容错归一 selectedPois：旧数据缺键、对象坏形状、单项非字符串 id 均不白屏；
@@ -21,7 +22,7 @@ function normalizeSelectedPois(value: unknown): Record<string, string[]> {
 
 /**
  * 选景点步骤（Plan 2 第三步）：逐点列出路线节点与已选摘要；
- * 点行进入点详情（本 Task 用 selectedPoint 占位，Task 9 替换为 PointDetail）；
+ * 点行进入 PointDetail 点详情勾选景点；
  * “全部点帮我定”为每个未选点填入默认经典项；“生成完整行程”先补默认再原子推进 result。
  */
 export default function PointsStep({ draft, update }: StepProps) {
@@ -86,20 +87,13 @@ export default function PointsStep({ draft, update }: StepProps) {
           先在上一步确定路线，再来挑景点。
         </section>
       ) : active ? (
-        /* 点详情占位：Task 9 替换为 PointDetail；提供返回列表入口 */
-        <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm font-medium text-foreground">{active}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            点详情后续接入：在这里勾选这个点想去的景点。
-          </p>
-          <button
-            type="button"
-            onClick={() => setSelectedPoint(null)}
-            className="h-11 w-full rounded-full border border-border bg-background text-[15px] text-foreground transition-colors hover:bg-muted"
-          >
-            返回列表
-          </button>
-        </section>
+        /* 点详情：勾选该点景点；确认回写归一后的 selectedPois，返回回到点列表 */
+        <PointDetail
+          point={active}
+          selectedIds={selectedPois[active] ?? []}
+          onConfirm={(ids) => update({ selectedPois: { ...selectedPois, [active]: ids } })}
+          onBack={() => setSelectedPoint(null)}
+        />
       ) : (
         /* 逐点列表行：首字方块 + 点名 + 已选摘要，整行可点（热区 min-h-14 ≥44px） */
         <div className="space-y-2">
@@ -134,7 +128,7 @@ export default function PointsStep({ draft, update }: StepProps) {
         </div>
       )}
 
-      {/* 底部两按钮：批量默认 / 生成完整行程；详情占位视图不显示，空路线禁用（热区 h-11 ≥44px） */}
+      {/* 底部两按钮：批量默认 / 生成完整行程；进入点详情时不显示，空路线禁用（热区 h-11 ≥44px） */}
       {!active && (
         <div className="space-y-2 pt-1">
           <button
