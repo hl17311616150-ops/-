@@ -94,3 +94,37 @@ it('allocateDays：总天数不足（R<0）时保持最少天数，不裁剪 POI
   // 分配天数之和等于最少天数总和（8），未被压缩
   expect(alloc.reduce((sum, n) => sum + n, 0)).toBe(8)
 })
+
+it('两城 morning 冲突：自驾段与返程块共存，后到块顺延不覆盖（Review I2）', () => {
+  // 末城仅 1 天、back.period=morning：自驾段（morning）与返程块（morning）同时段，
+  // 旧实现返程块覆盖自驾段导致整条 DriveSegment 丢失；修复后二者都在。
+  const d = draft({
+    points: ['长沙', '景德镇'],
+    pointGrouping: {},
+    depart: { date: '2026-11-08', period: 'morning' },
+    back: { date: '2026-11-09', period: 'morning' },
+    selectedPois: { 长沙: ['changsha-yuelushan'], 景德镇: ['jdz-taoxichuan'] },
+  })
+  const days = buildPlan(d)
+  expect(days).toHaveLength(2)
+  const lastDay = days[days.length - 1]
+  const drive = lastDay.blocks.find((b) => b.drive)
+  expect(drive?.drive?.from).toBe('长沙')
+  expect(drive?.drive?.to).toBe('景德镇')
+  expect(drive?.drive?.distanceKm).toBe(500)
+  expect(lastDay.blocks.some((b) => b.title.includes('返程'))).toBe(true)
+})
+
+it('单城一日：出发块与返程块同时段，两块都保留不互覆盖（Review I2）', () => {
+  const d = draft({
+    points: ['长沙'],
+    pointGrouping: {},
+    depart: { date: '2026-11-08', period: 'morning' },
+    back: { date: '2026-11-08', period: 'morning' },
+    selectedPois: { 长沙: ['changsha-yuelushan'] },
+  })
+  const days = buildPlan(d)
+  expect(days).toHaveLength(1)
+  expect(days[0].blocks.some((b) => b.title.includes('出发'))).toBe(true)
+  expect(days[0].blocks.some((b) => b.title.includes('返程'))).toBe(true)
+})

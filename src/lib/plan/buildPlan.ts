@@ -143,6 +143,28 @@ function buildDrive(prevCity: string, city: string): ScheduledBlock {
 }
 
 /**
+ * 预留块占位（Review I2）：从 preferredPeriod 起按 PERIODS 顺序找第一个空闲时段放入。
+ * 冲突时后到的块顺延到下一个空闲时段，避免同 period 后写覆盖先写导致整块丢失；
+ * 放入时把块的 period 字段同步为实际占用时段。三个时段全占（预留块最多 3 个，兜底）
+ * 才回退覆盖 preferredPeriod，不产生第四个时段。
+ */
+function addReserved(
+  reserved: Map<TimeOfDay, ScheduledBlock>,
+  preferredPeriod: TimeOfDay,
+  block: ScheduledBlock,
+): void {
+  const start = PERIODS.indexOf(preferredPeriod)
+  for (let i = start; i < PERIODS.length; i += 1) {
+    const period = PERIODS[i]
+    if (!reserved.has(period)) {
+      reserved.set(period, { ...block, period })
+      return
+    }
+  }
+  reserved.set(preferredPeriod, { ...block, period: preferredPeriod })
+}
+
+/**
  * 规则 5 + 6：编排每一天并挂住宿。
  * 返回按城市顺序、城市内日期顺序排列的 DayPlan[]。
  */
@@ -169,11 +191,12 @@ export function buildPlan(draft: PlanningDraft): DayPlan[] {
       const isLastDayOfCity = k === cityDayCount - 1
       const isLastGlobalDay = isLastCity && isLastDayOfCity
 
-      // 预留块：period → 块；出发块 / 自驾段 / 返程块互斥时段，重叠情形（既是自驾首日又是返程末日）可共存。
+      // 预留块：period → 块；出发块 / 自驾段 / 返程块经 addReserved 顺延占位，
+      // 同时段冲突时后到块移到下一空闲时段，不覆盖、不丢块。
       const reserved = new Map<TimeOfDay, ScheduledBlock>()
 
       if (isFirstCity && isFirstDayOfCity && draft.depart) {
-        reserved.set(draft.depart.period, {
+        addReserved(reserved, draft.depart.period, {
           period: draft.depart.period,
           title: `出发，前往 ${city.city}`,
           note: '首日行程不排满',
@@ -181,11 +204,11 @@ export function buildPlan(draft: PlanningDraft): DayPlan[] {
       }
 
       if (!isFirstCity && isFirstDayOfCity) {
-        reserved.set('morning', buildDrive(cities[c - 1].city, city.city))
+        addReserved(reserved, 'morning', buildDrive(cities[c - 1].city, city.city))
       }
 
       if (isLastCity && isLastDayOfCity && draft.back) {
-        reserved.set(draft.back.period, {
+        addReserved(reserved, draft.back.period, {
           period: draft.back.period,
           title: '返程',
           note: '返程回到家',

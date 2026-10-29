@@ -20,10 +20,19 @@ it('渲染块与住宿', () => {
   expect(screen.getByText(/五一广场和颐酒店/)).toBeInTheDocument()
 })
 
-it('自驾段标里程（distanceKm>0）', () => {
+it('长途自驾段：333 分钟显示约 6h（distanceKm>0）', () => {
   const d: DayPlan = { ...day, blocks: [{ period: 'morning', title: '自驾前往 景德镇', drive: { from: '长沙', to: '景德镇', distanceKm: 500, durationMin: 333 } }] }
   render(<DayCard day={d} cityLabel="长沙 → 景德镇" onSwapStay={() => {}} />)
   expect(screen.getByText(/500\s*km/)).toBeInTheDocument()
+  expect(screen.getByText(/约\s*6\s*h/)).toBeInTheDocument()
+})
+
+it('短途自驾段：27 分钟显示约 27 分钟，不出现 0h', () => {
+  const d: DayPlan = { ...day, blocks: [{ period: 'morning', title: '自驾前往 呈坎', drive: { from: '黟县', to: '呈坎', distanceKm: 40, durationMin: 27 } }] }
+  render(<DayCard day={d} cityLabel="黟县 → 呈坎" onSwapStay={() => {}} />)
+  expect(screen.getByText(/40\s*km/)).toBeInTheDocument()
+  expect(screen.getByText(/约\s*27\s*分钟/)).toBeInTheDocument()
+  expect(screen.queryByText(/0\s*h/)).toBeNull()
 })
 
 it('点换展开住宿并回调', async () => {

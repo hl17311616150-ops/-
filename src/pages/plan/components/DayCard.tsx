@@ -111,18 +111,23 @@ function NormalBlock({ block }: { block: ScheduledBlock }) {
   )
 }
 
+/** 自驾时长文案：不足 1 小时按分钟显示，满 1 小时按四舍五入小时显示，避免短途出现「约 0h」 */
+function formatDriveDuration(durationMin: number): string {
+  if (durationMin < 60) return `约 ${durationMin} 分钟`
+  return `约 ${Math.round(durationMin / 60)}h`
+}
+
 /** 自驾段：虚线分隔；distanceKm > 0 才标里程时长，否则只显示标题 */
 function DriveBlock({ block }: { block: ScheduledBlock }) {
   if (!block.drive) return null
   const { drive } = block
-  const hours = Math.round(drive.durationMin / 60)
 
   return (
     <div className="space-y-1 border-t border-dashed border-border pt-3">
       <p className="text-sm font-medium text-foreground">{block.title}</p>
       {drive.distanceKm > 0 && (
         <p className="text-xs text-muted-foreground">
-          {drive.distanceKm}km · 约 {hours}h
+          {drive.distanceKm}km · {formatDriveDuration(drive.durationMin)}
         </p>
       )}
     </div>
