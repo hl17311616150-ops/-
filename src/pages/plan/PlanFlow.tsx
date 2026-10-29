@@ -15,6 +15,7 @@ import type { StepProps } from './stepProps'
 import TimeStep from './steps/TimeStep'
 import RouteStep from './steps/RouteStep'
 import PointsStep from './steps/PointsStep'
+import ResultStep from './steps/ResultStep'
 
 /** 各步骤 AI 引导语（占位阶段先静态展示） */
 const STEP_GREETING: Record<PlanningStep, string> = {
@@ -68,17 +69,6 @@ function loadDraft(): PlanningDraft {
         : fallback.pointGrouping,
     days: Array.isArray(existing.days) ? existing.days : fallback.days,
   }
-}
-
-/**
- * 生成结果占位组件：真实行程生成属 Plan 3，本 Plan 仅占位展示。
- */
-function ResultPlaceholder() {
-  return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground">
-      行程准备生成
-    </div>
-  )
 }
 
 /**
@@ -158,7 +148,7 @@ export default function PlanFlow() {
 
       <StepBar step={draft.step} />
 
-      {/* 对话区：AI 问候 + 当前步骤；time / route / points 步接入真实步骤，result 仍为占位 */}
+      {/* 对话区：AI 问候 + 当前步骤；time / route / points / result 步均接入真实步骤 */}
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <ChatBubble who="ai">{STEP_GREETING[draft.step]}</ChatBubble>
         {draft.step === 'time' ? (
@@ -168,7 +158,7 @@ export default function PlanFlow() {
         ) : draft.step === 'points' ? (
           <PointsStep {...stepProps} />
         ) : (
-          <ResultPlaceholder />
+          <ResultStep {...stepProps} />
         )}
       </main>
 
