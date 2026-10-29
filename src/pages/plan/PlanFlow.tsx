@@ -12,14 +12,7 @@ import { ChatBubble } from './components/ChatBubble'
 import type { StepProps } from './stepProps'
 import TimeStep from './steps/TimeStep'
 import RouteStep from './steps/RouteStep'
-
-/** 各步骤占位文案（后续 Task 由真实步骤组件替换） */
-const STEP_PLACEHOLDER: Record<PlanningStep, string> = {
-  time: '【时间步骤】后续接入：出发 / 返程时间与出行天数',
-  route: '【路线步骤】后续接入：出发点 → 途经点 → 目的地',
-  points: '【选景点步骤】后续接入：勾选想去的景点',
-  result: '【生成步骤】后续接入：生成完整行程方案',
-}
+import PointsStep from './steps/PointsStep'
 
 /** 各步骤 AI 引导语（占位阶段先静态展示） */
 const STEP_GREETING: Record<PlanningStep, string> = {
@@ -74,13 +67,12 @@ function loadDraft(): PlanningDraft {
 }
 
 /**
- * 占位步骤组件：接收统一 StepProps，后续 Task 按步骤替换为真实组件。
- * 当前仅渲染步骤占位文案，不消费 update / onUserInput。
+ * 生成结果占位组件：真实行程生成属 Plan 3，本 Plan 仅占位展示。
  */
-function StepPlaceholder({ draft }: StepProps) {
+function ResultPlaceholder() {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground">
-      {STEP_PLACEHOLDER[draft.step]}
+      行程准备生成
     </div>
   )
 }
@@ -156,15 +148,17 @@ export default function PlanFlow() {
 
       <StepBar step={draft.step} />
 
-      {/* 对话区：AI 问候 + 当前步骤；time / route 步接入真实步骤，其余步骤仍为占位 */}
+      {/* 对话区：AI 问候 + 当前步骤；time / route / points 步接入真实步骤，result 仍为占位 */}
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <ChatBubble who="ai">{STEP_GREETING[draft.step]}</ChatBubble>
         {draft.step === 'time' ? (
           <TimeStep {...stepProps} />
         ) : draft.step === 'route' ? (
           <RouteStep {...stepProps} />
+        ) : draft.step === 'points' ? (
+          <PointsStep {...stepProps} />
         ) : (
-          <StepPlaceholder {...stepProps} />
+          <ResultPlaceholder />
         )}
       </main>
 
