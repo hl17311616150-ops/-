@@ -5,14 +5,15 @@ import { saveGeneratedTrip } from '../../../lib/plan/saveTrip'
 import { queryStays } from '../../../lib/plan/stays'
 import PlanMap from '../components/PlanMap'
 import DayCard from '../components/DayCard'
+import SuggestionList from '../components/SuggestionList'
 import type { DayPlan, Stay } from '../../../types'
 
 /**
- * 结果步骤（Plan 3 Task 7）：把 buildPlan 生成的按天计划以地图 + 摘要条 + 按天卡片展示。
+ * 结果步骤（Plan 3 Task 7 / Task 8）：把 buildPlan 生成的按天计划以地图 + 摘要条 + 按天卡片展示。
  * - 地图复用 PlanMap；摘要条给出天数晚数 / 自驾 / 城市数 / 景点数；
  * - cityLabel 按 resolveCities + allocateDays 展开，跨城第一天标 “上一城 → 本城”；
  * - 换住宿在本地不可变更新对应晚 stay；保存行程经 saveGeneratedTrip 写入 K.trip；
- * - “AI 再调整”仅切换展示布尔，SuggestionList 由 Task 8 挂载（届时再取用 update）。
+ * - “AI 再调整”展开 SuggestionList：onApply 把采纳后的新行程写回 days 并收起，onBack 仅收起。
  */
 export default function ResultStep({ draft }: StepProps) {
   const [days, setDays] = useState<DayPlan[]>(() => buildPlan(draft))
@@ -89,11 +90,17 @@ export default function ResultStep({ draft }: StepProps) {
         </span>
       </div>
 
-      {/* AI 建议区：Task 8 在此挂载 SuggestionList，本 Task 仅维护展示布尔 */}
+      {/* AI 建议区：展开后挂载 SuggestionList；采纳回写 days 并收起，返回行程仅收起 */}
       {showSuggestions && (
-        <section className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground">
-          AI 优化建议（即将接入）
-        </section>
+        <SuggestionList
+          days={days}
+          draft={draft}
+          onApply={(newDays) => {
+            setDays(newDays)
+            setShowSuggestions(false)
+          }}
+          onBack={() => setShowSuggestions(false)}
+        />
       )}
 
       {/* 按天卡片：cityLabel 按分配结果逐天传入 */}
@@ -115,11 +122,12 @@ export default function ResultStep({ draft }: StepProps) {
         </p>
       )}
 
-      {/* 底部操作：AI 再调整（Task 8 接入）/ 保存行程 */}
+      {/* 底部操作：AI 再调整（aria-expanded 反映建议区开合）/ 保存行程 */}
       <div className="space-y-2 pt-1">
         <button
           type="button"
           data-testid="ai-adjust"
+          aria-expanded={showSuggestions}
           onClick={() => setShowSuggestions((open) => !open)}
           className="h-11 w-full rounded-full border border-border bg-card text-[15px] font-medium text-foreground transition-colors hover:bg-muted"
         >
