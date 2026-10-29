@@ -49,3 +49,33 @@ it('坏锚点旧草稿归一为空，不白屏', () => {
   expect(screen.getByLabelText('返程日期')).toHaveDisplayValue('')
   expect(screen.getByTestId('page-plan')).toBeInTheDocument()
 })
+
+it('pointGrouping 形状异常的旧草稿回退默认空映射，不白屏', () => {
+  // 字符串 / 数组都不是“非数组对象”，守卫回退 fallback.pointGrouping（{}）
+  save(K.planningDraft, {
+    id: 'current',
+    step: 'time',
+    points: ['长沙'],
+    selectedPois: {},
+    pointGrouping: 'broken-shape',
+    days: [],
+    createdAt: 1,
+    updatedAt: 1,
+  })
+  const first = mount()
+  expect(screen.getByTestId('page-plan')).toBeInTheDocument()
+  first.unmount()
+
+  save(K.planningDraft, {
+    id: 'current',
+    step: 'time',
+    points: ['长沙'],
+    selectedPois: {},
+    pointGrouping: ['宏村'],
+    days: [],
+    createdAt: 1,
+    updatedAt: 1,
+  })
+  mount()
+  expect(screen.getByTestId('page-plan')).toBeInTheDocument()
+})

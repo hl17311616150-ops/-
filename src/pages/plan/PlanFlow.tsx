@@ -63,6 +63,10 @@ function loadDraft(): PlanningDraft {
       existing.selectedPois && typeof existing.selectedPois === 'object' && !Array.isArray(existing.selectedPois)
         ? existing.selectedPois
         : fallback.selectedPois,
+    pointGrouping:
+      existing.pointGrouping && typeof existing.pointGrouping === 'object' && !Array.isArray(existing.pointGrouping)
+        ? existing.pointGrouping
+        : fallback.pointGrouping,
     days: Array.isArray(existing.days) ? existing.days : fallback.days,
   }
 }

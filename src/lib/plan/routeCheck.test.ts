@@ -7,8 +7,27 @@ const time = (totalDays = 6): TripTimeSummary => ({ totalDays, nights: totalDays
 it('宏村+黟县同时出现 → 地理重叠需决定', () => {
   const r = checkRoute(['长沙','黟县','宏村','呈坎'], time())
   const ov = r.filter((x) => x.kind === 'overlap')
-  expect(ov.some((x) => x.child === '宏村' && x.parent === '黟县')).toBe(true)
-  expect(ov.every((x) => x.level === 'decide')).toBe(true)
+  expect(ov).toHaveLength(1)
+  const hit = ov[0]
+  expect(hit.child).toBe('宏村')
+  expect(hit.parent).toBe('黟县')
+  expect(hit.level).toBe('decide')
+  expect(hit.title).toBe('宏村在黟县境内')
+  expect(hit.detail).toBe('建议作为黟县重点村安排、不另算城市、想去的点都保留')
+})
+
+it('顺序一致 → 精确标题“当前点顺序无明显绕路”', () => {
+  const r = checkRoute(['长沙','景德镇'], time())
+  const order = r.find((x) => x.kind === 'order')
+  expect(order?.level).toBe('info')
+  expect(order?.title).toBe('当前点顺序无明显绕路')
+})
+
+it('顺序不一致（呈坎先于黟县）→ 提示可能绕路', () => {
+  const r = checkRoute(['呈坎','黟县'], time())
+  const order = r.find((x) => x.kind === 'order')
+  expect(order?.level).toBe('info')
+  expect(order?.title).toContain('绕路')
 })
 
 it('多个子点都在黟县，逐对生成不遗漏（Review Focus #5）', () => {
@@ -43,4 +62,5 @@ it('单日里程 >500km 提示偏赶（仅告知）；刚好 500km 不判偏赶'
   const ok = checkRoute(['长沙','景德镇'], time())
   const okTime = ok.find((x) => x.kind === 'time')
   expect(okTime?.title).not.toContain('偏赶')
+  expect(okTime?.title).toBe('时间与路程匹配，节奏合理')
 })
