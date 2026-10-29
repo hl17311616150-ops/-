@@ -50,6 +50,20 @@ it('缩略图依次略小', () => {
   expect(screen.getByTestId('hot-card-wannan').querySelector('img')).toHaveStyle({ width: '56px' })
 })
 
+it('最前卡片：衬线标题、浮起阴影、显示描述；后面卡片不显示描述', () => {
+  renderStack()
+  const front = screen.getByTestId('hot-card-chuanxi')
+  const back = screen.getByTestId('hot-card-dianxibei')
+  // 标题衬线 15px
+  expect(front.querySelectorAll('span')[0]).toHaveStyle({ fontSize: '15px' })
+  expect(front.querySelectorAll('span')[0].style.fontFamily).toContain('Noto Serif SC')
+  // 最前卡片浮起阴影
+  expect(front.style.boxShadow).toContain('0 10px 24px')
+  // 最前显示描述，后面卡片不显示
+  expect(front).toHaveTextContent('雪山、藏寨、高山海子环线')
+  expect(back).not.toHaveTextContent('古城、雪山与高原湖泊')
+})
+
 it('滚轮向下（deltaY>0）：下一张到最前', () => {
   renderStack()
   fireEvent.wheel(screen.getByTestId('hot-route-stack'), { deltaY: 100 })

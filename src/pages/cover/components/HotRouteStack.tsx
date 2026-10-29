@@ -38,6 +38,11 @@ const TOUCH_THRESHOLD = 30
 /** 滚轮切换冷却时长：冷却窗口内忽略后续 wheel 事件，避免触控板连续数据流一次跳过多张 */
 const WHEEL_COOLDOWN_MS = 300
 
+const SERIF_STACK = '"Noto Serif SC","Songti SC",serif'
+/** 最前卡片浮起阴影；后两张更淡，保证倒梯形层叠层次 */
+const SHADOW_FRONT = '0 10px 24px rgba(0,0,0,0.28)'
+const SHADOW_BACK = '0 6px 16px rgba(0,0,0,0.18)'
+
 interface HotRouteStackProps {
   routes?: readonly HotRoute[]
 }
@@ -119,9 +124,10 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
           borderRadius: 16,
           display: leaving ? 'none' : 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '0 14px',
+          gap: 11,
+          padding: '5px 12px 5px 5px',
           boxSizing: 'border-box',
+          boxShadow: offset === 0 ? SHADOW_FRONT : SHADOW_BACK,
         }
         const imgSize = slot?.imgSize ?? LAYOUT[2].imgSize
 
@@ -141,9 +147,11 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
             <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span
                 style={{
-                  fontSize: 14,
+                  fontFamily: SERIF_STACK,
+                  fontSize: 15,
                   fontWeight: 600,
-                  color: '#1f2a24',
+                  color: '#2f3d33',
+                  letterSpacing: '0.5px',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -151,10 +159,24 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
               >
                 {route.name}
               </span>
-              <span style={{ fontSize: 11.5, color: '#6b7670', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 11, color: '#7d8a80', whiteSpace: 'nowrap' }}>
                 {route.days}天 · {route.distanceKm}km ·{' '}
-                <span style={{ color: '#2f9e63' }}>{route.difficulty}</span>
+                <span style={{ color: '#5a8a5e', fontWeight: 700 }}>{route.difficulty}</span>
               </span>
+              {offset === 0 && route.desc && (
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    color: '#98a296',
+                    marginTop: '3px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {route.desc}
+                </span>
+              )}
             </div>
           </>
         )

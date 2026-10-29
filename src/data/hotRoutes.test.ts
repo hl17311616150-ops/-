@@ -11,6 +11,7 @@ describe('HOT_ROUTES', () => {
       expect(r.distanceKm).toBeGreaterThan(0)
       expect(['轻松', '中等', '挑战']).toContain(r.difficulty)
       expect(r.image.length).toBeGreaterThan(0)
+      expect(r.desc && r.desc.length).toBeGreaterThan(0)
     }
   })
 
