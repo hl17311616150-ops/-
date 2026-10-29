@@ -4,9 +4,12 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, Send } from 'lucide-react'
 import type { PlanningDraft, PlanningStep } from '../../types'
 import { createDraft, getDraft, saveDraft } from '../../lib/planningDraft'
+import type { TimeAnchor, TimeOfDay } from '../../lib/time'
+import { parseTimeText } from '../../lib/plan/timeParse'
 import { StepBar } from './components/StepBar'
 import { ChatBubble } from './components/ChatBubble'
 import type { StepProps } from './stepProps'
+import TimeStep from './steps/TimeStep'
 
 /** 各步骤占位文案（后续 Task 由真实步骤组件替换） */
 const STEP_PLACEHOLDER: Record<PlanningStep, string> = {
@@ -24,6 +27,21 @@ const STEP_GREETING: Record<PlanningStep, string> = {
   result: '信息齐了，正在为你生成行程方案。',
 }
 
+/** 合法时段取值（时间粒度锁三档） */
+const PERIOD_VALUES: readonly TimeOfDay[] = ['morning', 'afternoon', 'evening']
+
+/**
+ * 锚点形状修复：旧数据里 date 不是字符串、或 period 不在三档内的锚点归一为 null；
+ * 坏锚点不传入 computeTripTime / date 输入框，避免白屏。
+ */
+function normalizeAnchor(value: unknown): TimeAnchor | null {
+  if (!value || typeof value !== 'object') return null
+  const anchor = value as Record<string, unknown>
+  if (typeof anchor.date !== 'string' || anchor.date.trim().length === 0) return null
+  if (typeof anchor.period !== 'string' || !PERIOD_VALUES.includes(anchor.period as TimeOfDay)) return null
+  return { date: anchor.date, period: anchor.period as TimeOfDay }
+}
+
 /**
  * 容错读取草稿：旧数据/缺字段用 createDraft 默认值兜底，数组与对象字段逐一校验，
  * 形状异常不抛错、不白屏；无草稿则新建并立即落盘。
@@ -38,6 +56,8 @@ function loadDraft(): PlanningDraft {
   return {
     ...fallback,
     ...existing,
+    depart: normalizeAnchor(existing.depart) ?? fallback.depart,
+    back: normalizeAnchor(existing.back) ?? fallback.back,
     points: Array.isArray(existing.points) ? existing.points : fallback.points,
     selectedPois:
       existing.selectedPois && typeof existing.selectedPois === 'object' && !Array.isArray(existing.selectedPois)
@@ -82,18 +102,28 @@ export default function PlanFlow() {
     })
   }
 
-  /** 底部输入框提交：本 Task 先空实现，不报错；后续 Task 按当前步骤解释用户输入 */
-  const onUserInput = (text: string) => {
-    void text
+  /**
+   * 底部输入框提交：按当前步骤分发。
+   * - time：自然语言经 parseTimeText 解析出出发/返程锚点后写回草稿；解析失败保持现状。
+   * - route / points / result 分支由后续 Task 6 / 8 接入。
+   */
+  const handleUserInput = (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    if (draft.step === 'time') {
+      const now = new Date()
+      const parsed = parseTimeText(trimmed, now.getFullYear(), now.getMonth() + 1)
+      if (parsed) update({ depart: parsed.depart, back: parsed.back })
+    }
   }
 
-  const stepProps: StepProps = { draft, update, onUserInput }
+  const stepProps: StepProps = { draft, update, onUserInput: handleUserInput }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const text = input.trim()
     if (!text) return
-    onUserInput(text)
+    handleUserInput(text)
     setInput('')
   }
 
@@ -116,10 +146,10 @@ export default function PlanFlow() {
 
       <StepBar step={draft.step} />
 
-      {/* 对话区：AI 问候 + 当前步骤占位，后续替换为真实步骤组件 */}
+      {/* 对话区：AI 问候 + 当前步骤；time 步接入 TimeStep，其余步骤仍为占位 */}
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <ChatBubble who="ai">{STEP_GREETING[draft.step]}</ChatBubble>
-        <StepPlaceholder {...stepProps} />
+        {draft.step === 'time' ? <TimeStep {...stepProps} /> : <StepPlaceholder {...stepProps} />}
       </main>
 
       {/* 底部常驻输入框：触控目标 ≥44px，回车提交 */}
