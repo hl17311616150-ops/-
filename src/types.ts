@@ -90,6 +90,8 @@ export interface PlanningDraft {
   back: TimeAnchor | null
   points: string[]
   selectedPois: Record<string, string[]>
+  /** 点到所属区域/重点村的分组映射（旧数据无此字段，按 optional 容错） */
+  pointGrouping?: Record<string, string>
   days: DayPlan[]
   createdAt: number
   updatedAt: number

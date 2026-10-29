@@ -5,6 +5,7 @@ describe('规划草稿', () => {
   it('草稿存取与清空', () => {
     const d = createDraft()
     expect(d.step).toBe('time')
+    expect(createDraft().pointGrouping).toEqual({})
     saveDraft({ ...d, step: 'route', points: ['长沙','景德镇'] })
     expect(getDraft()?.step).toBe('route')
     expect(getDraft()?.points).toEqual(['长沙','景德镇'])

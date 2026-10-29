@@ -30,6 +30,7 @@ export function createDraft(): PlanningDraft {
     back: null,
     points: [],
     selectedPois: {},
+    pointGrouping: {},
     days: [],
     createdAt: now,
     updatedAt: now,
