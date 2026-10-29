@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -34,6 +35,8 @@ const OFFSETS = [-1, 0, 1, 2] as const
 
 const WHEEL_THRESHOLD = 8
 const TOUCH_THRESHOLD = 30
+/** 滚轮切换冷却时长：冷却窗口内忽略后续 wheel 事件，避免触控板连续数据流一次跳过多张 */
+const WHEEL_COOLDOWN_MS = 300
 
 interface HotRouteStackProps {
   routes?: readonly HotRoute[]
@@ -49,6 +52,15 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
   const n = routes.length
   const [start, setStart] = useState(0)
   const touchStartY = useRef<number | null>(null)
+  const wheelLocked = useRef(false)
+  const wheelReleaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current)
+    },
+    [],
+  )
 
   const at = (offset: number) => ((start + offset) % n + n) % n
 
@@ -57,6 +69,13 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
 
   const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
     if (Math.abs(event.deltaY) < WHEEL_THRESHOLD) return
+    // 冷却仅作用于滚轮；触摸手势走 touchEnd 的 30px 阈值，不经过此锁
+    if (wheelLocked.current) return
+    wheelLocked.current = true
+    if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current)
+    wheelReleaseTimer.current = setTimeout(() => {
+      wheelLocked.current = false
+    }, WHEEL_COOLDOWN_MS)
     if (event.deltaY > 0) next()
     else prev()
   }
@@ -110,7 +129,7 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
           <>
             <img
               src={route.image}
-              alt={route.name}
+              alt=""
               style={{
                 width: `${imgSize}px`,
                 height: `${imgSize}px`,
@@ -145,6 +164,7 @@ export default function HotRouteStack({ routes = HOT_ROUTES }: HotRouteStackProp
             <Link
               key={route.id}
               to={`/community/${route.id}`}
+              aria-current="true"
               data-testid={`hot-card-${route.id}`}
               style={{ ...cardStyle, textDecoration: 'none' }}
             >

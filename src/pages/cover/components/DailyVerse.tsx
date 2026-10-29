@@ -6,7 +6,7 @@ interface DailyVerseProps {
 
 /**
  * 每日诗句（归野 V4 首页封面 Task 4）：按日期确定性取一句山野诗。
- * 衬线斜体诗句 + 左侧半透明白引号 + 11px 非斜体作者；单行不换行，溢出由父容器控制。
+ * 衬线斜体诗句 + 左侧半透明白引号 + 11px 非斜体作者；单行不换行，根节点限宽 100%，超出以省略号裁切。
  */
 export default function DailyVerse({ date = new Date() }: DailyVerseProps) {
   const verse = verseForDate(date)
@@ -15,7 +15,12 @@ export default function DailyVerse({ date = new Date() }: DailyVerseProps) {
     <div
       data-testid="daily-verse"
       className="mt-[14px] whitespace-nowrap"
-      style={{ fontFamily: '"Noto Serif SC","Songti SC",serif' }}
+      style={{
+        fontFamily: '"Noto Serif SC","Songti SC",serif',
+        maxWidth: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
     >
       <span aria-hidden="true" className="text-[13px] not-italic text-white/40">
         「
