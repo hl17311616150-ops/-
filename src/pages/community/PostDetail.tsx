@@ -196,7 +196,7 @@ export default function PostDetail(): JSX.Element {
               // Ruling E：resolvePlace 命中才在日期后追加 " · 名称"；未命中只显示日期，不虚构地点
               const place = resolvePlace(entry.nodeId)
               const placeText = place ? ` · ${place.name}` : ''
-              return <PostDiaryCard key={entry.id} entry={entry} placeText={placeText} urlMap={urlMap} />
+              return <PostDiaryCard key={entry.id} entry={entry} placeText={placeText} urlMap={urlMap} onOpenPhoto={handleOpenPhoto} />
             })}
           </div>
         ) : (

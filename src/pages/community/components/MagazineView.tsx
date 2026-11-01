@@ -25,16 +25,6 @@ function BrandMark() {
   )
 }
 
-/** 毛玻璃搜索圆内放大镜图标 */
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </svg>
-  )
-}
-
 /**
  * 社区杂志沉浸视图（Plan 6 · Task 3）：
  * 风景 banner + 衬线标题 + 毛玻璃分类；编辑精选大图卡、热门两列小卡、其余全宽卡。
@@ -64,7 +54,7 @@ export default function MagazineView({ posts, activeCategory, onCategoryChange, 
             background: 'linear-gradient(180deg,rgba(16,24,20,.4) 0%,rgba(16,24,20,0) 30%,rgba(16,24,20,.78) 100%)',
           }}
         />
-        {/* 顶部行：品牌 + 搜索圆 */}
+        {/* 顶部行：品牌（原死搜索圆已移除，Ruling J） */}
         <div
           style={{
             position: 'absolute',
@@ -89,23 +79,6 @@ export default function MagazineView({ posts, activeCategory, onCategoryChange, 
           >
             <BrandMark />
             发现
-          </div>
-          <div
-            data-testid="mag-search-circle"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,.16)',
-              border: '1px solid rgba(255,255,255,.4)',
-              backdropFilter: 'blur(10px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-            }}
-          >
-            <SearchIcon />
           </div>
         </div>
         {/* 标题区 */}

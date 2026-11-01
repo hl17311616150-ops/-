@@ -97,20 +97,26 @@ export default function PostCover({ post, onBack, onToggleSave, saved, followed,
           justifyContent: 'space-between',
         }}
       >
-        <button type="button" aria-label="返回" data-testid="post-cover-circle" onClick={onBack} style={circleStyle}>
+        <button type="button" aria-label="返回" data-testid="post-back-btn" onClick={onBack} style={circleStyle}>
           <BackIcon />
         </button>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             type="button"
             aria-label={saved ? '取消收藏' : '收藏'}
-            data-testid="post-cover-circle"
+            data-testid="post-cover-save-btn"
             onClick={onToggleSave}
             style={circleStyle}
           >
             <BookmarkIcon saved={saved} />
           </button>
-          <button type="button" aria-label="分享" data-testid="post-cover-circle" style={circleStyle}>
+          <button
+            type="button"
+            aria-label="分享"
+            data-testid="post-share-btn"
+            aria-disabled="true"
+            style={{ ...circleStyle, cursor: 'default' }}
+          >
             <ShareIcon />
           </button>
         </div>

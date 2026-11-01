@@ -26,6 +26,16 @@ it('点网格照片打开全屏，计数与照片流一致，关闭返回详情'
   fireEvent.click(screen.getByTestId('fs-close'))
   await waitFor(() => expect(screen.queryByTestId('fs-root')).not.toBeInTheDocument())
 })
+it('默认日记 Tab 点缩略图按钮打开全屏，计数格式正确，关闭返回详情', async () => {
+  render(<MemoryRouter initialEntries={['/community/chuanxi']}><PostDetailRoutes /></MemoryRouter>)
+  await waitFor(() => expect(screen.getByTestId('post-cover')).toBeInTheDocument())
+  const opener = screen.getAllByTestId('post-diary-img')[0].closest('button')!
+  fireEvent.click(opener)
+  expect(await screen.findByTestId('fs-root')).toBeInTheDocument()
+  expect(screen.getByTestId('fs-count').textContent).toMatch(/1\s*\//)
+  fireEvent.click(screen.getByTestId('fs-close'))
+  await waitFor(() => expect(screen.queryByTestId('fs-root')).not.toBeInTheDocument())
+})
 it('纯文字条目不进全屏流，照片流只含图片', async () => {
   const post = COMMUNITY_POSTS.find((p) => p.id === 'chuanxi')!
   render(<MemoryRouter initialEntries={['/community/chuanxi']}><PostDetailRoutes /></MemoryRouter>)

@@ -27,7 +27,7 @@ it('封面高 300、标题 24px 衬线、毛玻璃圆 36；路线卡圆角 15；
   await waitFor(() => expect(screen.getByTestId('post-cover')).toBeInTheDocument())
   expect(screen.getByTestId('post-cover').style.height).toBe('300px')
   expect(screen.getByTestId('post-title').style.fontSize).toBe('24px')
-  expect(screen.getAllByTestId('post-cover-circle')[0].style.width).toBe('36px')
+  expect(screen.getByTestId('post-back-btn').style.width).toBe('36px')
   expect(screen.getByTestId('post-route-card').style.borderRadius).toBe('15px')
   const dimg = screen.getAllByTestId('post-diary-img')[0]
   expect(dimg.style.width).toBe('64px'); expect(dimg.style.borderRadius).toBe('9px')

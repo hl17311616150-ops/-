@@ -3,11 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import MagazineView from './MagazineView'
 import { COMMUNITY_POSTS } from '../../../data/community'
 
-it('banner 高 268、标题 29px 衬线、毛玻璃圆 36px', () => {
+it('banner 高 268、标题 29px 衬线', () => {
   render(<MagazineView posts={COMMUNITY_POSTS} activeCategory="全部" onCategoryChange={vi.fn()} onOpenPost={vi.fn()} />)
   expect(screen.getByTestId('mag-banner').style.height).toBe('268px')
   expect(screen.getByTestId('mag-title').style.fontSize).toBe('29px')
-  expect(screen.getByTestId('mag-search-circle').style.width).toBe('36px')
 })
 
 it('编辑精选大卡高 178、圆角 18；热门两列小卡高 150、圆角 16', () => {
