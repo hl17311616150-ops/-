@@ -63,6 +63,28 @@ it('嵌套回复头像 26、查看全部可展开；底部输入框圆角999、�
   await waitFor(() => expect(screen.getByText('mark一下')).toBeInTheDocument())
 })
 
+it('空白 / 纯空格发送被拒：输入保留、不新增评论条目、树不重算', async () => {
+  mount()
+  await screen.findAllByTestId('comment-text')
+  const beforeCount = screen.getAllByTestId('comment-text').length
+  const input = screen.getByTestId('comment-input')
+
+  // 纯空格：addUserComment 返回 null → handleSend 返回 false，输入不清空、树不重算
+  fireEvent.change(input, { target: { value: '   ' } })
+  fireEvent.click(screen.getByTestId('comment-send'))
+  expect(input).toHaveValue('   ')
+  expect(screen.getAllByTestId('comment-text')).toHaveLength(beforeCount)
+  expect(
+    screen.getAllByTestId('comment-text').some((el) => el.textContent?.trim() === ''),
+  ).toBe(false)
+
+  // 空串方向：同样被拒，输入与条目数保持不变
+  fireEvent.change(input, { target: { value: '' } })
+  fireEvent.click(screen.getByTestId('comment-send'))
+  expect(input).toHaveValue('')
+  expect(screen.getAllByTestId('comment-text')).toHaveLength(beforeCount)
+})
+
 it('未知 postId 显示兜底与返回，不白屏', async () => {
   mount('不存在')
   expect(await screen.findByTestId('comments-not-found')).toBeInTheDocument()
