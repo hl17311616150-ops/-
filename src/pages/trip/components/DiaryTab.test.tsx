@@ -27,6 +27,15 @@ it('点缩略图回调对应 photoId', async () => {
   expect(open).toEqual(['p7'])
 })
 
+it('多图缩略图锁定 64px：按钮不被 flex 压缩，照片行横向滚动', () => {
+  render(<DiaryTab entries={[entry('d1', ['p7', 'p8', 'p9'])]} onOpenPhoto={() => {}} />)
+  const photo = screen.getByTestId('diary-photo-p7')
+  expect(photo.style.flexShrink).toBe('0')
+  expect(photo.style.width).toBe('64px')
+  expect(photo.style.height).toBe('64px')
+  expect(photo.parentElement?.style.overflowX).toBe('auto')
+})
+
 it('空列表显示空状态', () => {
   render(<DiaryTab entries={[]} onOpenPhoto={() => {}} />)
   expect(screen.getByTestId('diary-empty')).toBeInTheDocument()

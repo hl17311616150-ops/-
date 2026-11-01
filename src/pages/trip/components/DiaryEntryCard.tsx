@@ -37,7 +37,7 @@ export function DiaryEntryCard({ entry, urlMap, onOpenPhoto }: DiaryEntryCardPro
       </div>
 
       {entry.photoIds.length > 0 && (
-        <div style={{ display: 'flex', gap: '6px', margin: '8px 0 2px' }}>
+        <div style={{ display: 'flex', gap: '6px', margin: '8px 0 2px', overflowX: 'auto' }}>
           {entry.photoIds.map((pid) => {
             const url = urlMap.get(pid)
             return (
@@ -46,7 +46,7 @@ export function DiaryEntryCard({ entry, urlMap, onOpenPhoto }: DiaryEntryCardPro
                 type="button"
                 data-testid={`diary-photo-${pid}`}
                 onClick={() => onOpenPhoto(pid)}
-                style={{ width: 64, height: 64, borderRadius: 8, padding: 0, overflow: 'hidden', border: 'none', cursor: 'pointer' }}
+                style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, padding: 0, overflow: 'hidden', border: 'none', cursor: 'pointer' }}
               >
                 {url ? (
                   <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
