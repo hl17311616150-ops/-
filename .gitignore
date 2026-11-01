@@ -29,3 +29,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 e2e-out.txt
+
+# Vitest 机器可读报告（json reporter 生成）
+.vitest/
