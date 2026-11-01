@@ -14,6 +14,7 @@ it('getPostById 命中热门卡片 id', () => {
 it('sortPosts hot 按 likes 降序、days 按 days 升序、distance 按 distanceKm 升序', () => {
   expect(sort(COMMUNITY_POSTS, 'hot').map((p) => p.likes)[0]).toBe(Math.max(...COMMUNITY_POSTS.map((p) => p.likes)))
   expect(sort(COMMUNITY_POSTS, 'days').map((p) => p.days)).toEqual([...COMMUNITY_POSTS].sort((a, b) => a.days - b.days).map((p) => p.days))
+  expect(sort(COMMUNITY_POSTS, 'distance').map((p) => p.distanceKm)).toEqual([...COMMUNITY_POSTS].sort((a, b) => a.distanceKm - b.distanceKm).map((p) => p.distanceKm))
 })
 it('filterByDifficulty 只返回对应难度', () => {
   expect(fd(COMMUNITY_POSTS, '挑战').every((p) => p.difficulty === '挑战')).toBe(true)
