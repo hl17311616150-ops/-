@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -62,5 +62,23 @@ describe('TripDetail 行程回顾页', () => {
     await waitFor(() => expect(screen.getByTestId('review-back')).toBeInTheDocument())
     await userEvent.click(screen.getByTestId('review-back'))
     expect(screen.getByTestId('home')).toBeInTheDocument()
+  })
+
+  it('回顾数据加载失败显示错误兜底，点重试重新加载后进入就绪视图', async () => {
+    const trip = createTrip()
+    trip.title = '皖南古村 6 日'
+    trip.totalDays = 6
+    save(K.trip, trip)
+    const store = await import('../../lib/review/seedStore')
+    const spy = vi.spyOn(store, 'getReviewData').mockRejectedValueOnce(new Error('IDB broken'))
+
+    renderAt()
+    await waitFor(() => expect(screen.getByTestId('review-error')).toBeInTheDocument())
+    expect(screen.getByText('回顾加载失败，请重试')).toBeInTheDocument()
+
+    spy.mockRestore()
+    await userEvent.click(screen.getByTestId('review-retry'))
+    await waitFor(() => expect(screen.getByText('皖南古村 6 日')).toBeInTheDocument())
+    expect(screen.getByTestId('tab-diary')).toBeInTheDocument()
   })
 })

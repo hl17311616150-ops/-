@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FullscreenViewer from './FullscreenViewer'
 import { putAlbumPhoto } from '../../../lib/album'
@@ -66,4 +66,23 @@ it('条目级页面点：数量等于有照片条目数，点击跳该条目首�
   expect(dots).toHaveLength(2)
   await userEvent.click(screen.getByTestId('fs-dot-1'))
   expect(screen.getByTestId('fs-count')).toHaveTextContent('3 / 3')
+})
+
+it('末张：下一钮禁用、上一钮可用（边界补全）', () => {
+  render(<FullscreenViewer items={items} startIndex={2} onClose={() => {}} />)
+  expect(screen.getByTestId('fs-next')).toBeDisabled()
+  expect(screen.getByTestId('fs-prev')).toBeEnabled()
+})
+
+it('键盘翻页：末张右键不越界、首张左键不越界，正常右键递增', () => {
+  const last = render(<FullscreenViewer items={items} startIndex={2} onClose={() => {}} />)
+  fireEvent.keyDown(window, { key: 'ArrowRight' })
+  expect(screen.getByTestId('fs-count')).toHaveTextContent('3 / 3')
+  last.unmount()
+
+  render(<FullscreenViewer items={items} startIndex={0} onClose={() => {}} />)
+  fireEvent.keyDown(window, { key: 'ArrowLeft' })
+  expect(screen.getByTestId('fs-count')).toHaveTextContent('1 / 3')
+  fireEvent.keyDown(window, { key: 'ArrowRight' })
+  expect(screen.getByTestId('fs-count')).toHaveTextContent('2 / 3')
 })

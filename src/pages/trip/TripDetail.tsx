@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { getTrip } from '../../lib/trip'
@@ -27,25 +27,39 @@ export default function TripDetail() {
   useParams()
 
   const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [stream, setStream] = useState<PhotoStreamItem[]>([])
   const [tab, setTab] = useState<ReviewTab>('diary')
   const [viewer, setViewer] = useState<ViewerState>({ open: false, index: 0 })
+  const aliveRef = useRef(true)
+
+  /** 读取当前行程并组装回顾数据；挂载 effect 与错误态重试按钮共用同一加载流程 */
+  const load = () => {
+    const current = getTrip()
+    setLoadError(false)
+    getReviewData(current)
+      .then(({ entries: list }) => {
+        if (!aliveRef.current) return
+        setTrip(current)
+        setEntries(list)
+        setStream(buildPhotoStream(list))
+        setReady(true)
+      })
+      .catch(() => {
+        if (!aliveRef.current) return
+        setLoadError(true)
+      })
+  }
 
   useEffect(() => {
-    let alive = true
-    const current = getTrip()
-    getReviewData(current).then(({ entries: list }) => {
-      if (!alive) return
-      setTrip(current)
-      setEntries(list)
-      setStream(buildPhotoStream(list))
-      setReady(true)
-    })
+    aliveRef.current = true
+    load()
     return () => {
-      alive = false
+      aliveRef.current = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /** 点照片：在照片流中按 photoId 定位下标后打开全屏 */
@@ -65,7 +79,40 @@ export default function TripDetail() {
 
   return (
     <div data-testid="page-trip" className="mx-auto flex h-[100svh] w-full max-w-[480px] flex-col bg-background page-slide">
-      {!ready || !trip ? (
+      {loadError ? (
+        <div
+          data-testid="review-error"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            padding: 24,
+            color: '#8a9488',
+            fontSize: 13,
+          }}
+        >
+          <span>回顾加载失败，请重试</span>
+          <button
+            type="button"
+            data-testid="review-retry"
+            onClick={load}
+            style={{
+              padding: '8px 18px',
+              border: '1px solid #6FA879',
+              borderRadius: 999,
+              background: 'none',
+              color: '#3a4a3e',
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            重试
+          </button>
+        </div>
+      ) : !ready || !trip ? (
         <div
           data-testid="review-loading"
           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a9488', fontSize: 13 }}
