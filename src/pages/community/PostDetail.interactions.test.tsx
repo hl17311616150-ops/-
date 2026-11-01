@@ -1,9 +1,16 @@
-import { expect, it } from 'vitest'
+import { beforeEach, expect, it } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import PostDetail from './PostDetail'
 import CommentsPage from './comments/CommentsPage'
 import { COMMUNITY_POSTS } from '../../data/community'
+import { getTrip } from '../../lib/trip'
+import { getReviewData } from '../../lib/review/seedStore'
+import { publishEntryToOngoing } from '../../lib/community/userPosts'
+
+beforeEach(() => {
+  localStorage.clear()
+})
 
 /** 测试夹具：为 PostDetail 的 useParams / useNavigate 提供路由上下文（与 PostDetail.test.tsx 同口径） */
 function PostDetailRoutes() {
@@ -68,4 +75,18 @@ it('评论项为可点按钮，点击进入评论页', async () => {
   await waitFor(() => expect(screen.getByTestId('post-cover')).toBeInTheDocument())
   fireEvent.click(screen.getByTestId('post-comments-btn'))
   expect(await screen.findByTestId('comments-page')).toBeInTheDocument()
+})
+
+it('用户 ongoing 帖经 getAnyPostById 可打开详情，不进 post-not-found 兜底', async () => {
+  // 由当前行程落一条用户 ongoing 帖（确定性 id ongoing_<tripId>），锁定「用户帖可达详情」接线目标
+  const trip = getTrip()
+  const { entries } = await getReviewData(trip)
+  publishEntryToOngoing(trip, entries[0])
+  const ongoingId = `ongoing_${trip.id}`
+
+  render(<MemoryRouter initialEntries={[`/community/${ongoingId}`]}><PostDetailRoutes /></MemoryRouter>)
+  expect(await screen.findByTestId('post-cover')).toBeInTheDocument()
+  expect(screen.queryByTestId('post-not-found')).toBeNull()
+  // 空标题行程兜底为默认文案，标题回显证明解析到的正是刚落库的用户帖
+  expect(screen.getByTestId('post-title').textContent).toBe('我的山野游记')
 })
