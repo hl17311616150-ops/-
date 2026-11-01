@@ -9,6 +9,8 @@ interface PostCoverProps {
   onBack: () => void
   onToggleSave: () => void
   saved: boolean
+  followed: boolean
+  onToggleFollow: () => void
 }
 
 /** 返回箭头（对齐 mockup c-top 左侧 gc 内 SVG） */
@@ -58,12 +60,13 @@ const circleStyle: CSSProperties = {
 }
 
 /**
- * 社区帖子封面（Plan 6 · Task 5）：
+ * 社区帖子封面（Plan 6 · Task 6）：
  * 300px 风景封面 + 三段深色渐变；顶部返回 / 收藏 / 分享毛玻璃圆钮；
- * 作者头像与白底关注胶囊、24px 衬线标题、11.5px meta（难度绿色）。
+ * 作者头像与关注胶囊、24px 衬线标题、11.5px meta（难度绿色）。
+ * 收藏圆与详情 act 栏收藏共用 `saved`；关注胶囊与详情共用 `followed`，均为本地视觉态。
  * 视觉值逐字对齐 community-detail-dark.html。
  */
-export default function PostCover({ post, onBack, onToggleSave, saved }: PostCoverProps): JSX.Element {
+export default function PostCover({ post, onBack, onToggleSave, saved, followed, onToggleFollow }: PostCoverProps): JSX.Element {
   return (
     <div
       data-testid="post-cover"
@@ -133,19 +136,24 @@ export default function PostCover({ post, onBack, onToggleSave, saved }: PostCov
             {post.author.avatarChar}
           </span>
           <span style={{ fontSize: 12.5, color: '#f0f3ec', fontWeight: 600 }}>{post.author.name}</span>
-          <span
+          <button
+            type="button"
+            data-testid="post-follow-btn"
+            onClick={onToggleFollow}
             style={{
               marginLeft: 'auto',
               fontSize: 11,
-              color: '#2f3d33',
-              background: '#fff',
+              color: followed ? '#fff' : '#2f3d33',
+              background: followed ? '#2f3d33' : '#fff',
               padding: '5px 14px',
               borderRadius: 999,
               fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
             }}
           >
-            关注
-          </span>
+            {followed ? '已关注' : '关注'}
+          </button>
         </div>
         <h1
           data-testid="post-title"
