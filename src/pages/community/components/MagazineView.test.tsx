@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import MagazineView from './MagazineView'
 import { COMMUNITY_POSTS } from '../../../data/community'
+import type { CommunityPost } from '../../../data/community'
 
 it('banner 高 268、标题 29px 衬线', () => {
   render(<MagazineView posts={COMMUNITY_POSTS} activeCategory="全部" onCategoryChange={vi.fn()} onOpenPost={vi.fn()} />)
@@ -30,4 +31,18 @@ it('分类 chips 点击触发 onCategoryChange', () => {
   render(<MagazineView posts={COMMUNITY_POSTS} activeCategory="全部" onCategoryChange={onCat} onOpenPost={vi.fn()} />)
   fireEvent.click(screen.getByTestId('chip-自驾'))
   expect(onCat).toHaveBeenCalledWith('自驾')
+})
+
+it('里程为 0 的精选大卡隐藏里程段与分隔符，不出现 0km', () => {
+  const zeroKm: CommunityPost = { ...COMMUNITY_POSTS[0], id: 'zero_km', featured: true, distanceKm: 0, days: 3, nights: 2 }
+  render(<MagazineView posts={[zeroKm]} activeCategory="全部" onCategoryChange={vi.fn()} onOpenPost={vi.fn()} />)
+  const big = screen.getByTestId('mag-big-card')
+  expect(big.textContent).toContain('3天')
+  expect(big.textContent).not.toContain('0km')
+})
+
+it('种子帖里程在精选大卡照常显示（>0 渲染口径零变化）', () => {
+  render(<MagazineView posts={COMMUNITY_POSTS} activeCategory="全部" onCategoryChange={vi.fn()} onOpenPost={vi.fn()} />)
+  const featured = COMMUNITY_POSTS.find((p) => p.featured)
+  expect(screen.getByTestId('mag-big-card').textContent).toContain(`${featured?.distanceKm}km`)
 })

@@ -64,6 +64,12 @@ const DEFAULT_TITLE = '我的山野游记'
 /** 行程节点为空时的兜底路线（对齐内置川西路线） */
 const DEFAULT_NODES: readonly string[] = ['成都', '康定', '新都桥', '丹巴']
 
+/** departDate 缺失 / 非法时的日期区间占位文案 */
+const FALLBACK_DATE_TEXT = '日期待定'
+
+/** 日期串格式：YYYY-MM-DD（严格四位年 / 两位月 / 两位日） */
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+
 /** 新帖默认难度 / 分类 / 里程（本地演示，后续可由行程数据推算） */
 const DEFAULT_DIFFICULTY: CommunityPost['difficulty'] = '中等'
 const DEFAULT_CATEGORY = '自驾'
@@ -169,6 +175,40 @@ export function buildDraft(trip: Trip, entries: DiaryEntry[]): PublishDraft {
   }
 }
 
+/** 日期标签：M月D日（月 / 日不补零，对齐种子帖文案） */
+function dateLabel(month: number, day: number): string {
+  return `${month}月${day}日`
+}
+
+/**
+ * 由行程出发日期 + 总天数确定性派生日期区间（不依赖当前时刻）：
+ * - departDate 非字符串 / 不匹配 YYYY-MM-DD / 回填不一致（如 2026-02-30 被 Date 进位）→ 回退「日期待定」；
+ * - 结束日 = 出发日 + (totalDays − 1)；同月输出「M月D日–D日」，跨月 / 跨年输出「M月D日–M月D日」。
+ */
+function deriveDateRangeText(trip: Trip): string {
+  if (typeof trip.departDate !== 'string') return FALLBACK_DATE_TEXT
+  const match = DATE_PATTERN.exec(trip.departDate)
+  if (!match) return FALLBACK_DATE_TEXT
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const start = new Date(year, month - 1, day)
+  // 回填一致性校验：拒绝非法日期（new Date 对 2 月 30 日等会自动进位到次月）
+  if (start.getFullYear() !== year || start.getMonth() !== month - 1 || start.getDate() !== day) {
+    return FALLBACK_DATE_TEXT
+  }
+
+  const spanDays = typeof trip.totalDays === 'number' && trip.totalDays > 0 ? Math.floor(trip.totalDays) : 1
+  const end = new Date(year, month - 1, day + (spanDays - 1))
+  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
+
+  if (sameMonth) {
+    return `${dateLabel(month, day)}–${end.getDate()}日`
+  }
+  return `${dateLabel(month, day)}–${dateLabel(end.getMonth() + 1, end.getDate())}`
+}
+
 /** 构建一条用户帖的公共字段（作者 / 互动计数 / 状态默认值） */
 function basePostFields(trip: Trip): Pick<
   CommunityPost,
@@ -181,7 +221,7 @@ function basePostFields(trip: Trip): Pick<
     nights: Math.max(0, days - 1),
     distanceKm: 0,
     difficulty: DEFAULT_DIFFICULTY,
-    dateRangeText: '',
+    dateRangeText: deriveDateRangeText(trip),
     likes: 0,
     comments: 0,
     collects: 0,

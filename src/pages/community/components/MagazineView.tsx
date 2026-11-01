@@ -209,7 +209,7 @@ export default function MagazineView({ posts, activeCategory, onCategoryChange, 
                   {featured.title}
                 </div>
                 <div style={{ fontSize: 11, color: '#dfe6dc', marginTop: 4, display: 'flex', gap: 8 }}>
-                  <span>{featured.days}天 · {featured.distanceKm}km ·</span>
+                  <span>{featured.days}天{featured.distanceKm > 0 ? ` · ${featured.distanceKm}km` : ''} ·</span>
                   <span style={{ color: '#9cc79e', fontWeight: 700 }}>{featured.difficulty}</span>
                 </div>
               </div>

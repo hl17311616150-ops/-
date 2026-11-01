@@ -143,7 +143,7 @@ export default function RouteListView({ posts, onOpenPost, onUse }: RouteListVie
               <div style={{ fontSize: 13.5, color: '#eef1ea', fontWeight: 600 }}>{post.title}</div>
               <div style={{ fontSize: 10.5, color: '#9aa498', marginTop: 3, display: 'flex', gap: 7 }}>
                 <span>
-                  {post.days}天 · {post.distanceKm}km ·
+                  {post.days}天{post.distanceKm > 0 ? ` · ${post.distanceKm}km` : ''} ·
                 </span>
                 <span style={{ color: '#9cc79e', fontWeight: 700 }}>{post.difficulty}</span>
               </div>

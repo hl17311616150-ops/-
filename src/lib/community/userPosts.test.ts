@@ -71,6 +71,14 @@ function makeTrip(): Trip {
   return trip
 }
 
+function tripWithDate(departDate: string | null, totalDays: number): Trip {
+  const trip = createTrip()
+  trip.id = 'trip_date'
+  trip.departDate = departDate
+  trip.totalDays = totalDays
+  return trip
+}
+
 // ---------- Step 1：持久化与形状守卫 ----------
 
 it('loadStoredPosts 合并 ongoing/completed 两 key，坏形状被过滤', () => {
@@ -195,4 +203,32 @@ it('buildDraft 行程标题非空时保留标题，节点为空走默认路线�
   const d = buildDraft(trip, entries)
   expect(d.title).toBe('川西环线')
   expect(d.nodes).toEqual(['成都', '康定', '新都桥', '丹巴'])
+})
+
+// ---------- Fix round 1：日期区间确定性派生 ----------
+
+it('日期派生：同月输出「M月D日–D日」（ongoing 路径）', () => {
+  const trip = tripWithDate('2026-10-08', 5)
+  const post = publishEntryToOngoing(trip, entryA)
+  expect(post.dateRangeText).toBe('10月8日–12日')
+})
+
+it('日期派生：跨月输出「M月D日–M月D日」', () => {
+  const trip = tripWithDate('2026-10-28', 6)
+  const post = publishEntryToOngoing(trip, entryA)
+  expect(post.dateRangeText).toBe('10月28日–11月2日')
+})
+
+it('日期派生：departDate 为 null / 非法日期 / 格式不符时回退「日期待定」', () => {
+  expect(publishEntryToOngoing(tripWithDate(null, 3), entryA).dateRangeText).toBe('日期待定')
+  // 2026-02-30 不存在，Date 会进位到 3 月，回填不一致 → 兜底
+  expect(publishEntryToOngoing(tripWithDate('2026-02-30', 3), entryA).dateRangeText).toBe('日期待定')
+  // 非 YYYY-MM-DD 格式
+  expect(publishEntryToOngoing(tripWithDate('2026/10/08', 3), entryA).dateRangeText).toBe('日期待定')
+})
+
+it('日期派生：completed 路径复用同一派生口径', () => {
+  const trip = tripWithDate('2026-10-08', 5)
+  const saved = savePublishedPost(trip, entries, buildDraft(trip, entries))
+  expect(saved.dateRangeText).toBe('10月8日–12日')
 })

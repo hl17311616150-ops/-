@@ -181,10 +181,15 @@ export default function PostCover({ post, onBack, onToggleSave, saved, followed,
           <span>
             {post.days}天{post.nights}晚
           </span>
-          <span>·</span>
-          <span>
-            {post.category} {post.distanceKm}km
-          </span>
+          {/* 里程为 0（无离线里程数据源，诚实占位）时整段隐藏，连同其前置分隔符，避免游离「·」与「0km」 */}
+          {post.distanceKm > 0 && (
+            <>
+              <span>·</span>
+              <span>
+                {post.category} {post.distanceKm}km
+              </span>
+            </>
+          )}
           <span>·</span>
           <span style={{ color: '#9cc79e', fontWeight: 700 }}>{post.difficulty}</span>
         </div>
