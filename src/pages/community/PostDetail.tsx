@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type JSX } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getPostById } from '../../lib/community/selectors'
+import { getAnyPostById } from '../../lib/community/userPosts'
 import { ensureCommunityPhotos } from '../../lib/community/communitySeed'
 import { getAlbum } from '../../lib/album'
 import { buildPhotoStream } from '../../lib/review/photoStream'
@@ -14,21 +14,21 @@ import FullscreenViewer from '../trip/components/FullscreenViewer'
 type PostTab = 'diary' | 'photos'
 
 /**
- * 社区帖子详情（Plan 6 · Task 6，路由 /community/:id）：
- * - useParams 取 id 经 getPostById 查找；未找到渲染 post-not-found 兜底，返回按钮 navigate('/community')，
- *   不白屏、不抛未捕获异常；
+ * 社区帖子详情（Plan 6 · Task 6，路由 /community/:id；Plan 7 · Task 6 接线）：
+ * - useParams 取 id 经 getAnyPostById 查找（种子帖与用户帖统一命名空间）；未找到渲染 post-not-found
+ *   兜底，返回按钮 navigate('/community')，不白屏、不抛未捕获异常；
  * - 找到后挂载 ensureCommunityPhotos() 幂等播种社区照片，再 getAlbum() 建 photoId → url 映射；
  * - 渲染 PostCover + PostRouteCard + 日记 / 照片双 Tab：日记逐条 PostDiaryCard（地点经 resolvePlace
  *   命中才追加 " · 名称"，未命中只显示日期，不虚构地点）；照片复用 PhotoGridTab，流由 buildPhotoStream 展开；
  * - 点网格照片按 photoId 反查流内下标，打开封板 FullscreenViewer，关闭置回 null；
  * - 点赞 / 收藏 / 关注为本地布尔视觉态（不持久化、不外发），计数在基础值上 ±1，反复切回原值；
  *   封面收藏圆、关注胶囊与详情 act 栏共用同一组状态；底部「用这条路线规划」点击 navigate('/plan')，
- *   不携带路线数据。评论 / 发布不在本任务范围。
+ *   不携带路线数据；评论按钮 navigate('/community/<id>/comments') 进入评论页。
  */
 export default function PostDetail(): JSX.Element {
   const { id } = useParams()
   const navigate = useNavigate()
-  const post = id ? getPostById(id) : undefined
+  const post = id ? getAnyPostById(id) : undefined
 
   const [ready, setReady] = useState(false)
   const [urlMap, setUrlMap] = useState<ReadonlyMap<string, string>>(() => new Map())
@@ -203,7 +203,7 @@ export default function PostDetail(): JSX.Element {
           <PhotoGridTab items={stream} onOpenPhoto={handleOpenPhoto} />
         )}
 
-        {/* act 栏：点赞 / 评论 / 收藏，12.5px；激活色 #9cc79e；评论为静态展示，评论发布不在本任务范围 */}
+        {/* act 栏：点赞 / 评论 / 收藏，12.5px；激活色 #9cc79e；评论按钮进入评论页 */}
         <div
           style={{
             display: 'flex',
@@ -246,7 +246,22 @@ export default function PostDetail(): JSX.Element {
             <span data-testid="post-like-count">{post.likes + (liked ? 1 : 0)}</span>
           </button>
 
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: '#9aa498' }}>
+          <button
+            type="button"
+            data-testid="post-comments-btn"
+            onClick={() => navigate(`/community/${post.id}/comments`)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: 0,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              fontSize: 12.5,
+              color: '#9aa498',
+            }}
+          >
             <svg
               width="15"
               height="15"
@@ -260,7 +275,7 @@ export default function PostDetail(): JSX.Element {
               <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-9A8.5 8.5 0 1 1 21 11.5z" />
             </svg>
             <span>{post.comments}</span>
-          </span>
+          </button>
 
           <button
             type="button"

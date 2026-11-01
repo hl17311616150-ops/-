@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react'
 import { getTrip } from '../../lib/trip'
 import { getReviewData } from '../../lib/review/seedStore'
 import { buildPhotoStream } from '../../lib/review/photoStream'
+import { publishEntryToOngoing } from '../../lib/community/userPosts'
 import type { PhotoStreamItem } from '../../lib/review/photoStream'
 import type { DiaryEntry, Trip } from '../../types'
 import DiaryTab from './components/DiaryTab'
@@ -18,9 +19,10 @@ interface ViewerState {
 }
 
 /**
- * 行程回顾页（路由 /trip/:id）：
+ * 行程回顾页（路由 /trip/:id；Plan 7 · Task 6 接线）：
  * 挂载时一次性读取当前行程 → getReviewData 组装日记条目 → buildPhotoStream 扁平照片流；
- * 日记 / 照片双 Tab 受控切换；点照片按 photoId 在流中定位后打开全屏联动视图。
+ * 日记 / 照片双 Tab 受控切换；点照片按 photoId 在流中定位后打开全屏联动视图；
+ * 日记条目「边走边发」经 publishEntryToOngoing 追加到该行程 ongoing 帖，卡片内切换本地已发布提示。
  * useParams 的 id 仅用于路由匹配：阶段 0 单行程，不按 id 过滤。
  */
 export default function TripDetail() {
@@ -195,7 +197,11 @@ export default function TripDetail() {
           {/* 内容区：纵向滚动，日记图文混排 / 照片网格 */}
           <main className="flex-1 overflow-y-auto">
             {tab === 'diary' ? (
-              <DiaryTab entries={entries} onOpenPhoto={handleOpenPhoto} />
+              <DiaryTab
+                entries={entries}
+                onOpenPhoto={handleOpenPhoto}
+                onPublishEntry={(entry) => publishEntryToOngoing(getTrip(), entry)}
+              />
             ) : (
               <PhotoGridTab items={stream} onOpenPhoto={handleOpenPhoto} />
             )}

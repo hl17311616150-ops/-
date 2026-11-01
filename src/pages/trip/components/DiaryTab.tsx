@@ -6,9 +6,17 @@ import { DiaryEntryCard } from './DiaryEntryCard'
 /**
  * 行程回顾 · 日记 Tab 容器：
  * 挂载时一次性读取相册库构建 id → url 映射（alive 标志防止卸载后 setState 泄漏），
- * 空条目渲染空状态；非空逐条渲染 DiaryEntryCard，透传 urlMap 与照片点开回调。
+ * 空条目渲染空状态；非空逐条渲染 DiaryEntryCard，透传 urlMap、照片点开回调与可选边走边发回调。
  */
-export default function DiaryTab({ entries, onOpenPhoto }: { entries: DiaryEntry[]; onOpenPhoto: (photoId: string) => void }): JSX.Element {
+export default function DiaryTab({
+  entries,
+  onOpenPhoto,
+  onPublishEntry,
+}: {
+  entries: DiaryEntry[]
+  onOpenPhoto: (photoId: string) => void
+  onPublishEntry?: (entry: DiaryEntry) => void
+}): JSX.Element {
   const [urlMap, setUrlMap] = useState<ReadonlyMap<string, string>>(() => new Map())
 
   useEffect(() => {
@@ -31,7 +39,7 @@ export default function DiaryTab({ entries, onOpenPhoto }: { entries: DiaryEntry
   return (
     <div style={{ padding: '14px 16px 18px' }}>
       {entries.map((entry) => (
-        <DiaryEntryCard key={entry.id} entry={entry} urlMap={urlMap} onOpenPhoto={onOpenPhoto} />
+        <DiaryEntryCard key={entry.id} entry={entry} urlMap={urlMap} onOpenPhoto={onOpenPhoto} onPublishEntry={onPublishEntry} />
       ))}
     </div>
   )

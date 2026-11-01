@@ -27,4 +27,17 @@ describe('react-router 封面放射式导航骨架', () => {
       unmount()
     }
   })
+
+  it('/publish 与 /community/:id/comments 命中新页面，未知路径重定向 /', async () => {
+    const first = render(<MemoryRouter initialEntries={['/publish']}><AppRoutes /></MemoryRouter>)
+    expect(await screen.findByTestId('publish-page')).toBeInTheDocument()
+    first.unmount()
+
+    const second = render(<MemoryRouter initialEntries={['/community/chuanxi/comments']}><AppRoutes /></MemoryRouter>)
+    expect(await screen.findByTestId('comments-page')).toBeInTheDocument()
+    second.unmount()
+
+    render(<MemoryRouter initialEntries={['/no-such-path']}><AppRoutes /></MemoryRouter>)
+    expect(await screen.findByTestId('page-home')).toBeInTheDocument()
+  })
 })

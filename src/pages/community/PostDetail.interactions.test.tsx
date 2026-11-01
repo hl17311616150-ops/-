@@ -2,6 +2,7 @@ import { expect, it } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import PostDetail from './PostDetail'
+import CommentsPage from './comments/CommentsPage'
 import { COMMUNITY_POSTS } from '../../data/community'
 
 /** 测试夹具：为 PostDetail 的 useParams / useNavigate 提供路由上下文（与 PostDetail.test.tsx 同口径） */
@@ -9,6 +10,7 @@ function PostDetailRoutes() {
   return (
     <Routes>
       <Route path="/community/:id" element={<PostDetail />} />
+      <Route path="/community/:id/comments" element={<CommentsPage />} />
       <Route path="/community" element={<div data-testid="community-list" />} />
       <Route path="/plan" element={<div data-testid="probe-plan" />} />
     </Routes>
@@ -60,4 +62,10 @@ it('点“用这条路线规划”导航到 /plan', async () => {
   await waitFor(() => expect(screen.getByTestId('plan-route-btn')).toBeInTheDocument())
   fireEvent.click(screen.getByTestId('plan-route-btn'))
   await waitFor(() => expect(screen.queryByTestId('post-cover')).not.toBeInTheDocument())
+})
+it('评论项为可点按钮，点击进入评论页', async () => {
+  render(<MemoryRouter initialEntries={['/community/chuanxi']}><PostDetailRoutes /></MemoryRouter>)
+  await waitFor(() => expect(screen.getByTestId('post-cover')).toBeInTheDocument())
+  fireEvent.click(screen.getByTestId('post-comments-btn'))
+  expect(await screen.findByTestId('comments-page')).toBeInTheDocument()
 })
