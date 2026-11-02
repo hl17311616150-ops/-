@@ -39,6 +39,8 @@ export default function PublishPage(): JSX.Element {
   const navigate = useNavigate()
   const [entries, setEntries] = useState<DiaryEntry[] | null>(null)
   const [draft, setDraft] = useState<PublishDraft | null>(null)
+  /** 存储写失败 / 空选时置 true，渲染错误提示且不导航；改动草稿后自动清除 */
+  const [submitError, setSubmitError] = useState(false)
   const aliveRef = useRef(true)
 
   useEffect(() => {
@@ -91,10 +93,17 @@ export default function PublishPage(): JSX.Element {
     setDraft((prev) => (prev ? { ...prev, visibility } : prev))
   }
 
-  /** 固化发布：落库后回社区列表 */
+  /**
+   * 固化发布：空选 / 存储写失败（savePublishedPost 返回 null）时停留本页并提示，
+   * 不按成功导航；成功落库后回社区列表。
+   */
   const handleSubmit = (): void => {
     if (!entries || !draft) return
-    savePublishedPost(getTrip(), entries, draft)
+    const saved = savePublishedPost(getTrip(), entries, draft)
+    if (!saved) {
+      setSubmitError(true)
+      return
+    }
     navigate('/community')
   }
 
@@ -127,14 +136,34 @@ export default function PublishPage(): JSX.Element {
     )
   }
 
+  const hasSelection = draft.selectedEntryIds.length > 0
+
   return (
     <div
       data-testid="publish-page"
       style={{ background: '#1c2621', maxWidth: 480, margin: '0 auto', minHeight: '100svh' }}
     >
-      <PublishHeader title="发布游记" onBack={handleBack} onSubmit={handleSubmit} />
+      <PublishHeader title="发布游记" onBack={handleBack} onSubmit={handleSubmit} disabled={!hasSelection} />
 
       <div style={{ padding: '15px 16px 128px' }}>
+        {submitError && (
+          <div
+            role="alert"
+            data-testid="publish-error"
+            style={{
+              fontSize: 12,
+              color: '#f3b6ae',
+              background: 'rgba(220,120,110,.16)',
+              border: '1px solid rgba(220,120,110,.4)',
+              borderRadius: 10,
+              padding: '8px 11px',
+              marginBottom: 11,
+            }}
+          >
+            {hasSelection ? '保存失败，请检查浏览器存储后重试' : '至少选择一篇日记'}
+          </div>
+        )}
+
         <CoverPicker cover={draft.cover} onChangeCover={changeCover} />
 
         <TitleField value={draft.title} onChange={updateTitle} />
@@ -150,7 +179,7 @@ export default function PublishPage(): JSX.Element {
         <label style={sectionLabelStyle}>谁可以看</label>
         <VisibilitySegment value={draft.visibility} onChange={setVisibility} />
 
-        <FinalizeCard onSkip={handleSkip} onSubmit={handleSubmit} />
+        <FinalizeCard onSkip={handleSkip} onSubmit={handleSubmit} disabled={!hasSelection} />
       </div>
     </div>
   )

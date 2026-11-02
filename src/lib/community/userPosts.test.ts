@@ -1,4 +1,4 @@
-import { beforeEach, expect, it } from 'vitest'
+import { beforeEach, expect, it, vi } from 'vitest'
 import { save } from '../../storage/store'
 import { K } from '../../storage/keys'
 import { createTrip } from '../../types'
@@ -144,10 +144,12 @@ it('tripToNodes 命中 POI 取名称，未命中保留原值，空值跳过并�
 it('publishEntryToOngoing 首次建 ongoing，再次追加同 id 去重', () => {
   const trip = makeTrip()
   const p1 = publishEntryToOngoing(trip, entryA)
-  expect(p1.id).toBe(`ongoing_${trip.id}`)
-  expect(p1.status).toBe('ongoing')
+  expect(p1).not.toBeNull()
+  expect(p1!.id).toBe(`ongoing_${trip.id}`)
+  expect(p1!.status).toBe('ongoing')
   const p2 = publishEntryToOngoing(trip, entryB)
-  expect(p2.entries.map((e) => e.id)).toEqual([entryA.id, entryB.id])
+  expect(p2).not.toBeNull()
+  expect(p2!.entries.map((e) => e.id)).toEqual([entryA.id, entryB.id])
   publishEntryToOngoing(trip, entryA)
   expect(loadStoredPosts()[0].entries).toHaveLength(2)
 })
@@ -157,8 +159,9 @@ it('savePublishedPost 固化选中条目为 completed 并移除该 trip 的 ongo
   publishEntryToOngoing(trip, entryA)
   const draft = { ...buildDraft(trip, entries), selectedEntryIds: [entryA.id] }
   const saved = savePublishedPost(trip, entries, draft)
-  expect(saved.status).toBe('completed')
-  expect(saved.id).toBe(`completed_${trip.id}`)
+  expect(saved).not.toBeNull()
+  expect(saved!.status).toBe('completed')
+  expect(saved!.id).toBe(`completed_${trip.id}`)
   expect(loadStoredPosts().map((p) => p.status)).toEqual(['completed'])
 })
 
@@ -181,12 +184,13 @@ it('savePublishedPost 作者为 CURRENT_USER、互动计数为 0、featured 为 
   const trip = makeTrip()
   const draft = buildDraft(trip, entries)
   const saved = savePublishedPost(trip, entries, draft)
-  expect(saved.author).toEqual(CURRENT_USER)
-  expect(saved.likes).toBe(0)
-  expect(saved.comments).toBe(0)
-  expect(saved.collects).toBe(0)
-  expect(saved.featured).toBe(false)
-  expect(saved.visibility).toBe(draft.visibility)
+  expect(saved).not.toBeNull()
+  expect(saved!.author).toEqual(CURRENT_USER)
+  expect(saved!.likes).toBe(0)
+  expect(saved!.comments).toBe(0)
+  expect(saved!.collects).toBe(0)
+  expect(saved!.featured).toBe(false)
+  expect(saved!.visibility).toBe(draft.visibility)
 })
 
 it('buildDraft 标题空白兜底、默认全选、可见范围 public、封面取 COVER_OPTIONS[0]', () => {
@@ -210,25 +214,72 @@ it('buildDraft 行程标题非空时保留标题，节点为空走默认路线�
 it('日期派生：同月输出「M月D日–D日」（ongoing 路径）', () => {
   const trip = tripWithDate('2026-10-08', 5)
   const post = publishEntryToOngoing(trip, entryA)
-  expect(post.dateRangeText).toBe('10月8日–12日')
+  expect(post).not.toBeNull()
+  expect(post!.dateRangeText).toBe('10月8日–12日')
 })
 
 it('日期派生：跨月输出「M月D日–M月D日」', () => {
   const trip = tripWithDate('2026-10-28', 6)
   const post = publishEntryToOngoing(trip, entryA)
-  expect(post.dateRangeText).toBe('10月28日–11月2日')
+  expect(post).not.toBeNull()
+  expect(post!.dateRangeText).toBe('10月28日–11月2日')
 })
 
 it('日期派生：departDate 为 null / 非法日期 / 格式不符时回退「日期待定」', () => {
-  expect(publishEntryToOngoing(tripWithDate(null, 3), entryA).dateRangeText).toBe('日期待定')
+  expect(publishEntryToOngoing(tripWithDate(null, 3), entryA)?.dateRangeText).toBe('日期待定')
   // 2026-02-30 不存在，Date 会进位到 3 月，回填不一致 → 兜底
-  expect(publishEntryToOngoing(tripWithDate('2026-02-30', 3), entryA).dateRangeText).toBe('日期待定')
+  expect(publishEntryToOngoing(tripWithDate('2026-02-30', 3), entryA)?.dateRangeText).toBe('日期待定')
   // 非 YYYY-MM-DD 格式
-  expect(publishEntryToOngoing(tripWithDate('2026/10/08', 3), entryA).dateRangeText).toBe('日期待定')
+  expect(publishEntryToOngoing(tripWithDate('2026/10/08', 3), entryA)?.dateRangeText).toBe('日期待定')
 })
 
 it('日期派生：completed 路径复用同一派生口径', () => {
   const trip = tripWithDate('2026-10-08', 5)
   const saved = savePublishedPost(trip, entries, buildDraft(trip, entries))
-  expect(saved.dateRangeText).toBe('10月8日–12日')
+  expect(saved).not.toBeNull()
+  expect(saved!.dateRangeText).toBe('10月8日–12日')
+})
+
+// ---------- M-01：空选 / 空白标题提交守卫 ----------
+
+it('M-01: selectedEntryIds 为空时 savePublishedPost 返回 null，不写零日记帖', () => {
+  const trip = makeTrip()
+  const draft = { ...buildDraft(trip, entries), selectedEntryIds: [] }
+  expect(savePublishedPost(trip, entries, draft)).toBeNull()
+  expect(loadStoredPosts()).toEqual([])
+})
+
+it('M-01: 提交时标题为纯空格，落库标题回退默认文案', () => {
+  const trip = makeTrip()
+  const draft = { ...buildDraft(trip, entries), title: '   ' }
+  const saved = savePublishedPost(trip, entries, draft)
+  expect(saved).not.toBeNull()
+  expect(saved!.title).toBe('我的山野游记')
+})
+
+it('M-01: 提交时标题带首尾空格，落库标题被 trim', () => {
+  const trip = makeTrip()
+  const draft = { ...buildDraft(trip, entries), title: '  川西环线  ' }
+  const saved = savePublishedPost(trip, entries, draft)
+  expect(saved!.title).toBe('川西环线')
+})
+
+// ---------- M-06：save 失败态透传 ----------
+
+it('M-06: 存储写入抛错时 savePublishedPost 返回 null', () => {
+  const trip = makeTrip()
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota exceeded')
+  })
+  expect(savePublishedPost(trip, entries, buildDraft(trip, entries))).toBeNull()
+  spy.mockRestore()
+})
+
+it('M-06: 存储写入抛错时 publishEntryToOngoing 返回 null', () => {
+  const trip = makeTrip()
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota exceeded')
+  })
+  expect(publishEntryToOngoing(trip, entryA)).toBeNull()
+  spy.mockRestore()
 })

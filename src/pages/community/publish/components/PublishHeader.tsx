@@ -4,6 +4,8 @@ interface PublishHeaderProps {
   title: string
   onBack: () => void
   onSubmit: () => void
+  /** 空选（零日记）时禁用提交；不传默认 false，保持既有可点行为 */
+  disabled?: boolean
 }
 
 /**
@@ -11,7 +13,7 @@ interface PublishHeaderProps {
  * 左侧 32px 毛玻璃返回圆、15px 标题、右侧白底胶囊「发布」。
  * 视觉值逐字对齐 task-4-brief.md / publish-flow.html .hd。
  */
-export default function PublishHeader({ title, onBack, onSubmit }: PublishHeaderProps): JSX.Element {
+export default function PublishHeader({ title, onBack, onSubmit, disabled = false }: PublishHeaderProps): JSX.Element {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
       <button
@@ -58,6 +60,8 @@ export default function PublishHeader({ title, onBack, onSubmit }: PublishHeader
         type="button"
         data-testid="publish-submit-top"
         onClick={onSubmit}
+        disabled={disabled}
+        aria-disabled={disabled}
         style={{
           marginLeft: 'auto',
           background: '#fff',
@@ -67,7 +71,8 @@ export default function PublishHeader({ title, onBack, onSubmit }: PublishHeader
           padding: '7px 18px',
           borderRadius: 999,
           border: 'none',
-          cursor: 'pointer',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.45 : 1,
         }}
       >
         发布

@@ -200,7 +200,7 @@ export default function TripDetail() {
               <DiaryTab
                 entries={entries}
                 onOpenPhoto={handleOpenPhoto}
-                onPublishEntry={(entry) => publishEntryToOngoing(getTrip(), entry)}
+                onPublishEntry={(entry) => publishEntryToOngoing(getTrip(), entry) !== null}
               />
             ) : (
               <PhotoGridTab items={stream} onOpenPhoto={handleOpenPhoto} />

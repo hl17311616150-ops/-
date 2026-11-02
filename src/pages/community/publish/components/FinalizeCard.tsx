@@ -3,6 +3,8 @@ import type { JSX } from 'react'
 interface FinalizeCardProps {
   onSkip: () => void
   onSubmit: () => void
+  /** 空选（零日记）时禁用主按钮；不传默认 false，保持既有可点行为 */
+  disabled?: boolean
 }
 
 /**
@@ -11,7 +13,7 @@ interface FinalizeCardProps {
  * 「先不发」白 .2 边，「整理并发布」#6FA879 白字，均 12px、圆角 999、padding 9。
  * 视觉值逐字对齐 brief / .ongoing-card。
  */
-export default function FinalizeCard({ onSkip, onSubmit }: FinalizeCardProps): JSX.Element {
+export default function FinalizeCard({ onSkip, onSubmit, disabled = false }: FinalizeCardProps): JSX.Element {
   return (
     <div
       data-testid="finalize-card"
@@ -58,6 +60,8 @@ export default function FinalizeCard({ onSkip, onSubmit }: FinalizeCardProps): J
           type="button"
           data-testid="finalize-primary"
           onClick={onSubmit}
+          disabled={disabled}
+          aria-disabled={disabled}
           style={{
             flex: 1,
             fontSize: 12,
@@ -67,7 +71,8 @@ export default function FinalizeCard({ onSkip, onSubmit }: FinalizeCardProps): J
             background: '#6FA879',
             color: '#fff',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.45 : 1,
           }}
         >
           整理并发布

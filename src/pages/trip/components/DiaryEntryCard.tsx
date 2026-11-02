@@ -7,8 +7,11 @@ interface DiaryEntryCardProps {
   entry: DiaryEntry
   urlMap: ReadonlyMap<string, string>
   onOpenPhoto: (photoId: string) => void
-  /** 边走边发回调；不传时不渲染发布按钮，保持 Plan 5 既有行为 */
-  onPublishEntry?: (entry: DiaryEntry) => void
+  /**
+   * 边走边发回调；不传时不渲染发布按钮，保持 Plan 5 既有行为。
+   * 返回 true 表示已落库、卡片切「已发到社区」；false（写失败）不切态，用户可重试。
+   */
+  onPublishEntry?: (entry: DiaryEntry) => boolean
 }
 
 /**
@@ -23,7 +26,8 @@ export function DiaryEntryCard({ entry, urlMap, onOpenPhoto, onPublishEntry }: D
   const [published, setPublished] = useState(false)
 
   const handlePublish = (): void => {
-    onPublishEntry?.(entry)
+    // 回调返回 false（写失败）时不切已发布态，按钮保留供用户重试
+    if (onPublishEntry?.(entry) === false) return
     setPublished(true)
   }
 

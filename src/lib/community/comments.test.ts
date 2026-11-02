@@ -1,4 +1,4 @@
-import { beforeEach, expect, it } from 'vitest'
+import { beforeEach, expect, it, vi } from 'vitest'
 import { save } from '../../storage/store'
 import { K } from '../../storage/keys'
 import { SEED_COMMENTS, type CommentData } from './commentSeed'
@@ -183,4 +183,12 @@ it('空白 / 纯空格 / 纯制表换行评论返回 null，不写入存储', ()
   expect(addUserComment('chuanxi', '   ', null)).toBeNull()
   expect(addUserComment('chuanxi', '\t\n ', null)).toBeNull()
   expect(loadUserComments()).toHaveLength(0)
+})
+
+it('M-06: 存储写入抛错时 addUserComment 返回 null，不返回评论对象', () => {
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota exceeded')
+  })
+  expect(addUserComment('chuanxi', '保存失败测试', null)).toBeNull()
+  spy.mockRestore()
 })

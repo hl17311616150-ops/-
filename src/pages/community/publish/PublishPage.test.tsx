@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import PublishPage from './PublishPage'
@@ -59,4 +59,29 @@ it('底部卡片角标 11px 浅绿，整理并发布主绿，点击后导航回�
   expect(tag.style.color).toBe('rgb(156, 199, 158)')
   fireEvent.click(screen.getByTestId('finalize-primary'))
   await waitFor(() => expect(screen.getByTestId('after-publish')).toBeInTheDocument())
+})
+
+it('M-01: 取消全部日记后两个提交按钮均 disabled，且不导航', async () => {
+  renderPublish()
+  await screen.findByTestId('finalize-tag')
+  for (const ck of screen.getAllByTestId('diary-check')) {
+    fireEvent.click(ck)
+  }
+  const top = screen.getByTestId('publish-submit-top') as HTMLButtonElement
+  const primary = screen.getByTestId('finalize-primary') as HTMLButtonElement
+  expect(top.disabled).toBe(true)
+  expect(primary.disabled).toBe(true)
+  expect(screen.queryByTestId('after-publish')).not.toBeInTheDocument()
+})
+
+it('M-06: 存储写失败时显示错误提示且停留本页不导航', async () => {
+  renderPublish()
+  await screen.findByTestId('finalize-tag')
+  const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota exceeded')
+  })
+  fireEvent.click(screen.getByTestId('finalize-primary'))
+  expect(await screen.findByTestId('publish-error')).toBeInTheDocument()
+  expect(screen.queryByTestId('after-publish')).not.toBeInTheDocument()
+  spy.mockRestore()
 })

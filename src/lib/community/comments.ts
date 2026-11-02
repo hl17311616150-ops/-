@@ -91,7 +91,8 @@ let userCommentSeq = 0
  * 新增用户评论：
  * - text 先 trim，空白（空串 / 纯空格 / 纯制表换行）返回 null，不写入存储；
  * - 新评论 author=CURRENT_USER、likes=0、isAuthor=false；
- * - id = `usercm_<Date.now()>_<seq>`；unshift 进既有用户评论数组后持久化，返回落库评论。
+ * - id = `usercm_<Date.now()>_<seq>`；unshift 进既有用户评论数组后持久化，返回落库评论；
+ * - 写存储失败（save 返回 false）返回 null，不返回评论对象，由调用方停留并提示。
  */
 export function addUserComment(
   postId: string,
@@ -114,6 +115,6 @@ export function addUserComment(
   }
 
   const existing = loadUserComments()
-  save(K.communityComments, [comment, ...existing])
-  return comment
+  const ok = save(K.communityComments, [comment, ...existing])
+  return ok ? comment : null
 }

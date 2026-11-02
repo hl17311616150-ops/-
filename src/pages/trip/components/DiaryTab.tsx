@@ -15,7 +15,7 @@ export default function DiaryTab({
 }: {
   entries: DiaryEntry[]
   onOpenPhoto: (photoId: string) => void
-  onPublishEntry?: (entry: DiaryEntry) => void
+  onPublishEntry?: (entry: DiaryEntry) => boolean
 }): JSX.Element {
   const [urlMap, setUrlMap] = useState<ReadonlyMap<string, string>>(() => new Map())
 

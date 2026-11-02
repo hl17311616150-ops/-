@@ -235,8 +235,9 @@ function basePostFields(trip: Trip): Pick<
  * - 首次：新建 `ongoing_<tripId>` 帖写入 K.communityOngoing；
  * - 再次：命中同 tripId 的既有帖，按 entry id 去重后追加（保持原顺序）；
  * - 重复发布同一条不产生重复条目；返回落库后的帖。
+ * - 写存储失败（save 返回 false）时返回 null，不谎报成功，由调用方停留并提示。
  */
-export function publishEntryToOngoing(trip: Trip, entry: DiaryEntry): StoredPost {
+export function publishEntryToOngoing(trip: Trip, entry: DiaryEntry): StoredPost | null {
   const ongoing = loadArray<StoredPost>(K.communityOngoing, isStoredPost)
   const existing = ongoing.find((p) => p.tripId === trip.id)
 
@@ -245,8 +246,8 @@ export function publishEntryToOngoing(trip: Trip, entry: DiaryEntry): StoredPost
       ? existing.entries
       : [...existing.entries, entry]
     const post: StoredPost = { ...existing, entries }
-    save(K.communityOngoing, [...ongoing.filter((p) => p.tripId !== trip.id), post])
-    return post
+    const ok = save(K.communityOngoing, [...ongoing.filter((p) => p.tripId !== trip.id), post])
+    return ok ? post : null
   }
 
   const post: StoredPost = {
@@ -260,25 +261,33 @@ export function publishEntryToOngoing(trip: Trip, entry: DiaryEntry): StoredPost
     visibility: 'public',
     ...basePostFields(trip),
   }
-  save(K.communityOngoing, [...ongoing, post])
-  return post
+  const ok = save(K.communityOngoing, [...ongoing, post])
+  return ok ? post : null
 }
 
 /**
  * 整理并发布：按 selectedEntryIds 过滤 entries（保持传入 entries 的原顺序），
  * 固化为 `completed_<tripId>` 帖；先移除该行程在 ongoing / completed 两 key 中的旧帖，
  * 再分别保存过滤后的 ongoing 列表与「过滤后 completed 列表 + 新帖」；重复发布覆盖旧帖。
+ *
+ * 守卫（M-01 / M-06）：
+ * - selectedEntryIds 为空（零日记）时返回 null，不写零日记帖；
+ * - 标题提交时二次 trim，空白回退 DEFAULT_TITLE；
+ * - 先写 completed 再清 ongoing：completed 失败则原样返回 null、不动既有数据；
+ *   任一 save 返回 false 即返回 null，由调用方停留并提示，不按成功导航。
  */
-export function savePublishedPost(trip: Trip, entries: DiaryEntry[], draft: PublishDraft): StoredPost {
+export function savePublishedPost(trip: Trip, entries: DiaryEntry[], draft: PublishDraft): StoredPost | null {
   const selected = entries.filter((e) => draft.selectedEntryIds.includes(e.id))
+  if (selected.length === 0) return null
 
   const ongoing = loadArray<StoredPost>(K.communityOngoing, isStoredPost)
   const completed = loadArray<StoredPost>(K.communityCompleted, isStoredPost)
 
+  const trimmedTitle = draft.title.trim()
   const post: StoredPost = {
     id: `completed_${trip.id}`,
     tripId: trip.id,
-    title: draft.title,
+    title: trimmedTitle === '' ? DEFAULT_TITLE : trimmedTitle,
     cover: draft.cover,
     nodes: draft.nodes,
     entries: selected,
@@ -290,7 +299,8 @@ export function savePublishedPost(trip: Trip, entries: DiaryEntry[], draft: Publ
   const keptOngoing = ongoing.filter((p) => p.tripId !== trip.id)
   const keptCompleted = completed.filter((p) => p.tripId !== trip.id)
 
-  save(K.communityOngoing, keptOngoing)
-  save(K.communityCompleted, [...keptCompleted, post])
-  return post
+  const okCompleted = save(K.communityCompleted, [...keptCompleted, post])
+  if (!okCompleted) return null
+  const okOngoing = save(K.communityOngoing, keptOngoing)
+  return okOngoing ? post : null
 }
