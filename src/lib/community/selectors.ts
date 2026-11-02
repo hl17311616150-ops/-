@@ -1,14 +1,8 @@
-import { COMMUNITY_POSTS } from '../../data/community'
 import type { CommunityPost } from '../../data/community'
 import type { Difficulty } from '../../data/hotRoutes'
 
 /** 社区列表排序口径：hot=热度(likes 降序)、days=天数升序、distance=里程升序 */
 export type SortKey = 'hot' | 'days' | 'distance'
-
-/** 按帖子 id 查帖；未命中返回 undefined（不抛错） */
-export function getPostById(id: string): CommunityPost | undefined {
-  return COMMUNITY_POSTS.find((p) => p.id === id)
-}
 
 /**
  * 排序：始终在副本上排序，返回新数组，不修改入参。

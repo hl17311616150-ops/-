@@ -1,15 +1,11 @@
 import { expect, it } from 'vitest'
 import { HOT_ROUTES } from '../../data/hotRoutes'
 import { COMMUNITY_POSTS } from '../../data/community'
-import { getPostById as byId, sortPosts as sort, filterByDifficulty as fd, filterByCategory as fc, getMagazineLayout as ml } from './selectors'
+import { sortPosts as sort, filterByDifficulty as fd, filterByCategory as fc, getMagazineLayout as ml } from './selectors'
 
 // 核心：帖子 id 与 HOT_ROUTES 完全一致（命名空间 404 修复）
 it('帖子 id 与 HOT_ROUTES 逐字一致', () => {
   expect(COMMUNITY_POSTS.map((p) => p.id).sort()).toEqual([...HOT_ROUTES.map((r) => r.id)].sort())
-})
-it('getPostById 命中热门卡片 id', () => {
-  expect(byId('chuanxi')?.title).toContain('川西')
-  expect(byId('不存在')).toBeUndefined()
 })
 it('sortPosts hot 按 likes 降序、days 按 days 升序、distance 按 distanceKm 升序', () => {
   expect(sort(COMMUNITY_POSTS, 'hot').map((p) => p.likes)[0]).toBe(Math.max(...COMMUNITY_POSTS.map((p) => p.likes)))

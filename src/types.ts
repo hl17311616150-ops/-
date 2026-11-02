@@ -6,26 +6,7 @@
 
 import type { TimeAnchor, TimeOfDay } from './lib/time'
 
-export type Region = 'local' | 'domestic' | 'abroad'
 export type Visibility = 'self'
-
-/** 目的地（内置精选库条目） */
-export interface Destination {
-  id: string
-  name: string
-  region: Region
-  location: string
-  intro: string
-  attractions: string[]
-  /** 类型标签：登山徒步/人文风景/美食/探险/自然/城市休闲等 */
-  typeTags: string[]
-  /** 适宜月份（1-12），用于"本月推荐随月变化" */
-  seasonMonths: number[]
-  /** 气候常识（静态、离线）：各月气温区间、晴雨倾向、穿衣建议 */
-  climate: {
-    perMonth: Record<number, { high: number; low: number; rain: '干' | '适中' | '多雨'; clothing: string }>
-  }
-}
 
 /** 行程中的一天 */
 // （v1.8 起去掉"按天计划"：只保留总天数 + 总路线。按天细化排到 v2，由系统智能分析各点需要几天。）
@@ -149,18 +130,6 @@ export interface ChecklistItem {
   prepId: string
 }
 
-/** 待出行条目：已加入待出行清单的行程快照 */
-export interface UpcomingEntry {
-  id: string
-  /** 行程快照（加入时的完整行程） */
-  trip: Trip
-  addedAt: number
-  /** 出发前准备清单 key（= 行程 id） */
-  prepKey: string
-  /** 出发前准备是否全部勾选完成（万事俱备） */
-  prepDone: boolean
-}
-
 /** 照片记录（个人空间照片墙） */
 export interface PhotoEntry {
   id: string
@@ -219,10 +188,6 @@ export function createDiaryEntry(): DiaryEntry {
 
 export function createChecklistItem(text: string, prepId: string): ChecklistItem {
   return { id: uid('ck'), text, checked: false, source: 'auto', prepId }
-}
-
-export function createUpcomingEntry(trip: Trip): UpcomingEntry {
-  return { id: uid('up'), trip, addedAt: Date.now(), prepKey: trip.id, prepDone: false }
 }
 
 export function createPhotoEntry(destinationId: string, url: string): PhotoEntry {

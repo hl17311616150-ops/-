@@ -22,7 +22,7 @@ export interface CommentData {
 }
 
 /** 种子时间固定基准：2026-10-12 10:00（本地时区构造），再按序号做单调分钟偏移 */
-export const SEED_BASE_TS = new Date(2026, 9, 12, 10, 0).getTime()
+const SEED_BASE_TS = new Date(2026, 9, 12, 10, 0).getTime()
 
 /** 偏移步长：每条评论 +1 分钟，保证同帖内顶层早于回复、全局单调递增 */
 const OFFSET_STEP_MS = 60_000

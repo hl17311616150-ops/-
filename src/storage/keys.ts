@@ -16,14 +16,6 @@ export const K = {
   trips: 'trips',
   /** 足迹：回收站 */
   recycled: 'recycled',
-  /** 待出行清单 */
-  upcoming: 'upcoming',
-  /** 板块显示顺序 */
-  sectionOrder: 'section-order',
-  /** 分享快照 */
-  snapshots: 'snapshots',
-  /** 社区：点赞/收藏互动 */
-  communityInteractions: 'community-interactions',
   /** 社区：进行中（边走边发）用户帖 */
   communityOngoing: 'community-ongoing',
   /** 社区：已收尾用户帖 */

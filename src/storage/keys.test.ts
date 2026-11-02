@@ -8,13 +8,9 @@ describe('keys 常量表（收拢全库存储 key，值锁定现状防漂移）'
     expect(K.photos).toBe('photos')
     expect(K.trips).toBe('trips')
     expect(K.recycled).toBe('recycled')
-    expect(K.upcoming).toBe('upcoming')
   })
 
-  it('板块/快照/社区/主题 key 值不变', () => {
-    expect(K.sectionOrder).toBe('section-order')
-    expect(K.snapshots).toBe('snapshots')
-    expect(K.communityInteractions).toBe('community-interactions')
+  it('社区/主题 key 值不变', () => {
     expect(K.communityOngoing).toBe('community-ongoing')
     expect(K.communityCompleted).toBe('community-completed')
     expect(K.communityComments).toBe('community-comments')
