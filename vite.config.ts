@@ -10,7 +10,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test-setup.ts'],
-    // e2e 用例由 Playwright 运行，不纳入 vitest 单测
-    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+    exclude: ['node_modules/**', 'dist/**'],
   },
 })
